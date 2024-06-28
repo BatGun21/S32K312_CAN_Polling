@@ -1,0 +1,223 @@
+#include "Mcal.h"
+#include "Clock_Ip.h"
+#include "Clock_Ip_Cfg.h"
+#include "Siul2_Port_Ip.h"
+#include "Siul2_Port_Ip_Cfg.h"
+#include "Siul2_Dio_Ip.h"
+#include "FlexCAN_Ip.h"
+#include "IntCtrl_Ip.h"
+#include "Pit_Ip.h"
+#include "Lpuart_Uart_Ip.h"
+#include <string.h>
+#include <stdio.h>
+
+#define MSG_ID 0x55
+#define MSG_ID_RX 0x11
+#define RX_MB_IDX 1U
+#define TX_MB_IDX 0U
+#define LPUART_UART_INSTANCE    0
+#define BUFFER_SIZE            100
+
+/*! @brief Defines for user pin and port configurations */
+#define RED_LED_PIN                 13u
+#define GREEN_LED_PIN               14u
+#define LED_PORT                PTA_H_HALF
+
+#define FXOSC_CLOCK_FREQ   16000000U
+
+/* PIT instance used - 0 */
+#define PIT_INST_0 0U
+#define CH_0 0U
+#define PIT_PERIOD 300000
+
+/* Global flag updated in interrupt */
+volatile uint8 toggleLed = 0U;
+uint8 U8_counter = 0U;
+volatile int exit_code = 0;
+
+/* Global Buffers */
+uint8_t txBuffer[BUFFER_SIZE];
+uint8_t rxBuffer[BUFFER_SIZE];
+Flexcan_Ip_MsgBuffType rxData;
+
+/* User includes */
+uint8 dummyData[8] = {1,2,3,4,5,6,7,8};
+uint8 dummyData2[6] = {1,2,3,4,5,6};
+
+extern ISR(PIT_0_ISR);
+
+void PitNotification(void)
+{
+    U8_counter++;
+    if(U8_counter >= 100 && U8_counter <= 200)
+    {
+        toggleLed = 1U;
+    }
+    else if (U8_counter >= 200)
+    {
+        toggleLed = 2U;
+        U8_counter = 0;
+    }
+}
+
+void Clock_Init(void)
+{
+    /* Initialize the clock */
+    Clock_Ip_StatusType clockStatus;
+    clockStatus = Clock_Ip_Init(&Clock_Ip_aClockConfig[0]);
+    if (clockStatus != CLOCK_IP_SUCCESS || Clock_Ip_GetClockFrequency(FXOSC_CLK) != FXOSC_CLOCK_FREQ)
+    {
+        exit_code = -1;
+    }
+
+#if (CLOCK_IP_HAS_PLL_CLK)
+    while (CLOCK_IP_PLL_LOCKED != Clock_Ip_GetPllStatus())
+    {
+        /* Busy wait until the System PLL is locked */
+    }
+    Clock_Ip_DistributePll();
+#endif
+}
+
+void LED_Init(void)
+{
+    Siul2_Port_Ip_SetOutputBuffer(PORTA_H_HALF, 29, TRUE, PORT_MUX_AS_GPIO); //PTA29 as Output LED_RED
+    Siul2_Port_Ip_SetOutputBuffer(PORTA_H_HALF, 30, TRUE, PORT_MUX_AS_GPIO); //PTA30 as Output LED_GREEN
+    Siul2_Port_Ip_SetOutputBuffer(PORTA_H_HALF, 31, TRUE, PORT_MUX_AS_GPIO); //PTA31 as Output LED_BLUE
+}
+
+void LPUART_Init(void)
+{
+    Clock_Ip_EnableModuleClock(LPUART0_CLK);
+    Lpuart_Uart_Ip_Init(LPUART_UART_INSTANCE, &Lpuart_Uart_Ip_xHwConfigPB_0);
+}
+
+void UART_Error_Handler(Lpuart_Uart_Ip_StatusType Status)
+{
+    if (Status == LPUART_UART_IP_STATUS_ERROR)
+    {
+        Siul2_Dio_Ip_WritePin(LED_PORT, LED_RED_PIN, 1); // Turn on RED LED
+    }
+    else if(Status == LPUART_UART_IP_STATUS_BUSY)
+    {
+        Siul2_Dio_Ip_WritePin(LED_PORT, LED_GREEN_PIN, 1); // Turn on GREEN LED
+    }
+    else if (Status == LPUART_UART_IP_STATUS_TIMEOUT)
+    {
+        Siul2_Dio_Ip_WritePin(LED_PORT, LED_BLUE_PIN, 1); // Turn on BLUE LED
+    }
+    else if (Status == LPUART_UART_IP_STATUS_SUCCESS)
+    {
+        Siul2_Dio_Ip_WritePin(LED_PORT, LED_RED_PIN, 0); // Turn off RED LED
+        Siul2_Dio_Ip_WritePin(LED_PORT, LED_BLUE_PIN, 0); // Turn off BLUE LED
+        Siul2_Dio_Ip_WritePin(LED_PORT, LED_GREEN_PIN, 0); // Turn off GREEN LED
+    }
+}
+
+
+Flexcan_Ip_DataInfoType CAN_Init(void)
+{
+    FlexCAN_Ip_Init(INST_FLEXCAN_0, &FlexCAN_State0, &FlexCAN_Config0);
+
+    FlexCAN_Ip_EnterFreezeMode(INST_FLEXCAN_0);
+    Flexcan_Ip_DataInfoType rx_info = {
+        .msg_id_type = FLEXCAN_MSG_ID_STD,
+        .data_length = 8u,
+        .is_polling = TRUE,
+        .is_remote = FALSE
+    };
+    FlexCAN_Ip_ConfigRxMb(INST_FLEXCAN_0, RX_MB_IDX, &rx_info, MSG_ID_RX);
+    FlexCAN_Ip_ExitFreezeMode(INST_FLEXCAN_0);
+
+    return rx_info;
+}
+
+void PIT_Init(void)
+{
+    /* Initialize PIT instance 0 - Channel 0 */
+    IntCtrl_Ip_EnableIrq(PIT0_IRQn);
+    Pit_Ip_Init(PIT_INST_0, &PIT_0_InitConfig_PB);
+    Pit_Ip_InitChannel(PIT_INST_0, PIT_0_CH_0);
+    Pit_Ip_EnableChannelInterrupt(PIT_INST_0, CH_0);
+    Pit_Ip_StartChannel(PIT_INST_0, CH_0, PIT_PERIOD);
+}
+
+int main(void)
+{
+    /* Initialize the Osif driver */
+    OsIf_Init(NULL_PTR);
+
+    Clock_Init();
+
+    /* Init Pins */
+    Siul2_Port_Ip_Init(NUM_OF_CONFIGURED_PINS0, g_pin_mux_InitConfigArr0);
+
+    Siul2_Dio_Ip_WritePin(CAN0_STB_PORT, CAN0_STB_PIN, 0U);   // CAN0_STB  : PTC-20
+
+    /* Initialize interrupts */
+    IntCtrl_Ip_Init(&IntCtrlConfig_0);
+
+    PIT_Init();
+    Flexcan_Ip_DataInfoType tx_info = CAN_Init();
+    LPUART_Init();
+    LED_Init();
+
+    Siul2_Dio_Ip_WritePin(CAN0_STB_PORT, CAN0_STB_PIN, 1U);   //CAN0_STB
+
+    tx_info.is_polling = TRUE;
+    FlexCAN_Ip_Send(INST_FLEXCAN_0, TX_MB_IDX, &tx_info, MSG_ID, (uint8 *)&dummyData);
+
+    /* Send welcome message */
+    Lpuart_Uart_Ip_StatusType Uart_status;
+    Uart_status = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (uint8_t *)"Lets read some CAN messages here:", strlen("Lets read some CAN messages here:"), 50000000);
+    UART_Error_Handler(Uart_status);
+
+    char uartString[BUFFER_SIZE]; // String to hold the formatted CAN data
+
+    while (1)
+    {
+        /* Handle CAN transmissions */
+        if (toggleLed == 1U)
+        {
+            FlexCAN_Ip_Send(INST_FLEXCAN_0, TX_MB_IDX, &tx_info, MSG_ID, (uint8 *)&dummyData);
+            while (FlexCAN_Ip_GetTransferStatus(INST_FLEXCAN_0, TX_MB_IDX) != FLEXCAN_STATUS_SUCCESS)
+            {
+                FlexCAN_Ip_MainFunctionWrite(INST_FLEXCAN_0, TX_MB_IDX);
+            }
+            toggleLed = 0U;
+        }
+        else if (toggleLed == 2)
+        {
+            FlexCAN_Ip_Send(INST_FLEXCAN_0, TX_MB_IDX, &tx_info, MSG_ID, (uint8 *)&dummyData2);
+            while (FlexCAN_Ip_GetTransferStatus(INST_FLEXCAN_0, TX_MB_IDX) != FLEXCAN_STATUS_SUCCESS)
+            {
+                FlexCAN_Ip_MainFunctionWrite(INST_FLEXCAN_0, TX_MB_IDX);
+            }
+            toggleLed = 0U;
+        }
+
+        /* Poll for received CAN messages */
+         Flexcan_Ip_StatusType canStatus = FlexCAN_Ip_ReceiveBlocking(INST_FLEXCAN_0, RX_MB_IDX, &rxData, TRUE,100000);
+
+         if (canStatus == FLEXCAN_STATUS_SUCCESS)
+         {
+             // Format the received CAN data into a string
+              snprintf(uartString, BUFFER_SIZE, "CAN ID: 0x%08lX, Data: ", rxData.msgId);
+              for (uint8_t i = 0; i < rxData.dataLen; i++)
+              {
+                  char byteStr[4]; // Space for two hex digits and a space or null terminator
+                  snprintf(byteStr, sizeof(byteStr), "%02X ", rxData.data[i]);
+                  strncat(uartString, byteStr, BUFFER_SIZE - strlen(uartString) - 1);
+              }
+              strncat(uartString, "\r\n", BUFFER_SIZE - strlen(uartString) - 1); // Add a new line at the end
+             // Send received CAN data over UART
+              Uart_status = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (uint8_t *)uartString, strlen(uartString), 50000000);
+             UART_Error_Handler(Uart_status);
+
+             // Re-arm the mailbox for next reception
+             FlexCAN_Ip_ConfigRxMb(INST_FLEXCAN_0, RX_MB_IDX, &tx_info, MSG_ID_RX);
+         }
+    }
+
+    return 0;
+}
