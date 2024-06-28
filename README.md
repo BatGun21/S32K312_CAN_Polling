@@ -6,9 +6,10 @@ This repository contains a project implemented using the S32K312 microcontroller
 
 The project showcases the integration of various hardware peripherals and modules provided by the S32K312 microcontroller. It primarily focuses on:
 
+- **FlexCAN Module**: Facilitating communication over a Controller Area Network (CAN) bus, demonstrating message transmission and reception capabilities.
 - **UART Communication**: Implementing bi-directional data transfer between devices using UART protocols.
 - **Periodic Interrupt Timer (PIT)**: Utilizing PIT for precise timing and event triggering within the application.
-- **FlexCAN Module**: Facilitating communication over a Controller Area Network (CAN) bus, demonstrating message transmission and reception capabilities.
+
 
 ## Features
 
