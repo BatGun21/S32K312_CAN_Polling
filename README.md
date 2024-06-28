@@ -13,6 +13,12 @@ The project showcases the integration of various hardware peripherals and module
 
 ## Features
 
+### FlexCAN Integration
+The project integrates the FlexCAN module for CAN communication, enabling seamless data exchange over a CAN bus:
+- Initializing and configuring FlexCAN peripherals.
+- Transmitting and receiving CAN messages using standard identifiers.
+- Handling CAN message reception and updating application states accordingly.
+
 ### UART Communication
 The project utilizes UART for reliable and efficient communication between connected devices. It includes:
 - Initialization and configuration of UART interfaces.
@@ -25,11 +31,6 @@ PIT is employed to manage critical timing intervals essential for the applicatio
 - Triggering events and updating application states based on PIT interrupts.
 - Ensuring precise timing synchronization between communicating devices.
 
-### FlexCAN Integration
-The project integrates the FlexCAN module for CAN communication, enabling seamless data exchange over a CAN bus:
-- Initializing and configuring FlexCAN peripherals.
-- Transmitting and receiving CAN messages using standard identifiers.
-- Handling CAN message reception and updating application states accordingly.
 
 ## Hardware Requirements
 
