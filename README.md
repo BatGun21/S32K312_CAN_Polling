@@ -1,6 +1,6 @@
 # S32K312 Communication Project
 
-This repository contains a project implemented using the S32K312 microcontroller and developed with S32 Design Studio (S32DS) by NXP. The project demonstrates communication between devices using UART and timing control managed by the Periodic Interrupt Timer (PIT).
+This repository contains a project implemented using the S32K312 microcontroller and developed with S32 Design Studio (S32DS) by NXP. The project demonstrates communication between devices using CAN, verifies uaing UART and timing control managed by the Periodic Interrupt Timer (PIT).
 
 ## Overview
 
