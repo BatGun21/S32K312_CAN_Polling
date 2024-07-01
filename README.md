@@ -1,63 +1,69 @@
-# S32K312 Communication Project
+# S32K312 CAN Polling Project
 
-This repository contains a project implemented using the S32K312 microcontroller and developed with S32 Design Studio (S32DS) by NXP. The project demonstrates communication between devices using CAN, verifies uaing UART and timing control managed by the Periodic Interrupt Timer (PIT).
-
-## Overview
-
-The project showcases the integration of various hardware peripherals and modules provided by the S32K312 microcontroller. It primarily focuses on:
-
-- **FlexCAN Module**: Facilitating communication over a Controller Area Network (CAN) bus, demonstrating message transmission and reception capabilities.
-- **UART Communication**: Implementing bi-directional data transfer between devices using UART protocols.
-- **Periodic Interrupt Timer (PIT)**: Utilizing PIT for precise timing and event triggering within the application.
-
+This project demonstrates CAN communication, UART integration, and periodic interrupt handling on the NXP S32K312 microcontroller. It includes sending and receiving CAN messages, logging via UART, and using LEDs to indicate various statuses.
 
 ## Features
 
-### FlexCAN Integration
-The project integrates the FlexCAN module for CAN communication, enabling seamless data exchange over a CAN bus:
-- Initializing and configuring FlexCAN peripherals.
-- Transmitting and receiving CAN messages using standard identifiers.
-- Handling CAN message reception and updating application states accordingly.
+- **CAN Communication**
+  - **Transmission**: The system sends predefined CAN messages with specific IDs and data payloads.
+  - **Reception**: The system receives CAN messages, processes them, and logs the information via UART.
+- **UART Logging**
+  - Logs CAN messages and system status updates in real-time.
+  - Uses LEDs to indicate different UART status conditions such as errors or busy states.
+- **Periodic Interrupts**
+  - Utilizes the PIT (Periodic Interrupt Timer) module to create regular interrupts for executing periodic tasks.
+- **LED Indicators**
+  - LEDs connected to GPIO pins indicate system states and UART communication status.
 
-### UART Communication
-The project utilizes UART for reliable and efficient communication between connected devices. It includes:
-- Initialization and configuration of UART interfaces.
-- Sending and receiving data packets asynchronously.
-- Handling UART communication errors and timeouts.
+## Functional Overview
 
-### Periodic Interrupt Timer (PIT)
-PIT is employed to manage critical timing intervals essential for the application's functionality:
-- Configuring PIT channels for specific time intervals.
-- Triggering events and updating application states based on PIT interrupts.
-- Ensuring precise timing synchronization between communicating devices.
+### CAN Communication
 
+- **Sending CAN Messages**
+  - The code contains a list of CAN test cases, each with a unique CAN ID and data payload.
+  - These messages are sent through the CAN module and are used for testing and demonstration purposes.
 
-## Hardware Requirements
+- **Receiving CAN Messages**
+  - The system is configured to receive CAN messages.
+  - Upon reception, the CAN data is formatted into a string and logged via UART for easy monitoring.
 
-To replicate and utilize this project, the following hardware components are required:
-- **S32K312 Development Board**: Primary microcontroller platform for running the application.
-- **Personal Computer**: Installed with S32 Design Studio for project development and debugging.
-- **UART and CAN-Compatible Devices**: Peripheral devices compatible with UART and CAN protocols for testing and communication.
+### UART Logging
 
-## Setup and Usage
+- **Logging Mechanism**
+  - UART is used to output received CAN messages and other important information.
+  - If any UART errors occur, the system uses LEDs to indicate the specific error condition.
 
-### Setup Instructions
-1. **Hardware Setup**:
-   - Connect the S32K312 development board to required peripherals (UART and CAN devices).
-   - Ensure proper power and signal connections between devices.
+### Periodic Interrupts
 
-2. **Software Setup**:
-   - Import the project into S32 Design Studio IDE.
-   - Configure project settings and build configurations as per development requirements.
-   - Compile the project to generate the binary executable file.
+- **PIT Configuration**
+  - The PIT module is set up to generate interrupts at regular intervals.
+  - These interrupts are used to perform periodic tasks, such as toggling LEDs and checking the system status.
 
-### Usage Guidelines
-- **Flash the Microcontroller**:
-  - Flash the compiled binary onto the S32K312 microcontroller using the appropriate flashing tool.
+### LED Indicators
 
-- **Monitor UART Output**:
-  - Use a terminal emulator to monitor UART communication messages exchanged between devices.
+- **Status Indication**
+  - Different LEDs are used to indicate the status of UART communication and other system states.
+  - For example, LEDs may turn on or off based on error conditions or the state of CAN communication.
 
-- **Observe LED Indicators**:
-  - LED indicators on the development board may provide visual feedback on the application's operational status and events triggered by PIT interrupts.
+## How It Works
 
+1. **Initialization**: The system initializes the clock, CAN, UART, and GPIO for LEDs.
+2. **Sending Messages**: Predefined CAN messages are sent in a loop. Each message is logged via UART.
+3. **Receiving Messages**: CAN messages are received and logged in a formatted string over UART.
+4. **Handling Interrupts**: Periodic interrupts are generated to handle tasks such as checking the state of the system and updating LEDs.
+5. **Error Handling**: Any UART errors are indicated through LEDs to alert the user to communication issues.
+
+## Dependencies
+
+- NXP S32K312 microcontroller
+- Necessary peripheral drivers and configurations for CAN, UART, PIT, and GPIO.
+
+## Getting Started
+
+1. **Setup**: Connect the NXP S32K312 microcontroller to your development environment.
+2. **Compile and Upload**: Compile the code using your preferred IDE and upload it to the microcontroller.
+3. **Run the System**: Power on the system to start CAN communication, UART logging, and LED status indication.
+
+---
+
+This project is a practical demonstration of CAN communication and UART logging using the S32K312 microcontroller, providing a foundational example for automotive and embedded applications.
