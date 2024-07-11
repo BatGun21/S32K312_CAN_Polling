@@ -84,11 +84,13 @@ void PitNotification(void)
     if(U8_counter >= 100 && U8_counter <= 200)
     {
         toggleLed = 1U;
+        Siul2_Dio_Ip_WritePin(LED_GREEN_PORT, LED_GREEN_PIN, 1);
     }
     else if (U8_counter >= 200)
     {
         toggleLed = 2U;
         U8_counter = 0;
+        Siul2_Dio_Ip_WritePin(LED_GREEN_PORT, LED_GREEN_PIN, 0);
     }
 }
 
@@ -259,9 +261,7 @@ int main(void)
     while (1)
     {
         receiveCANMessage();
-        if (toggleLed == 1){
-        	testEVCC();
-        }
+        testEVCC();
     }
 
     return 0;

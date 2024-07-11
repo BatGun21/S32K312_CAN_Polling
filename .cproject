@@ -725,7 +725,7 @@
 	<storageModule moduleId="org.eclipse.embsys" parent_project="true" register_architecture="" register_board="---  none ---" register_chip="" register_core="" register_vendor=""/>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 	<storageModule moduleId="com.nxp.s32ds.cle.uct.core">
-		<sdkComponents>platform.driver.siul2_dio;platform.driver.rte_dio;platform.driver.FlexCAN;platform.driver.rte_can;platform.driver.IntCtrl_Ip;platform.driver.clock;platform.driver.rte_mcu;platform.driver.det;platform.driver.osif;platform.driver.siul2_port;platform.driver.rte_port;platform.driver.pit;platform.driver.rte_gpt;platform.driver.lpuart_uart;platform.driver.rte_uart</sdkComponents>
+		<sdkComponents>platform.driver.siul2_dio;platform.driver.rte_dio;platform.driver.FlexCAN;platform.driver.rte_can;platform.driver.IntCtrl_Ip;platform.driver.clock;platform.driver.rte_mcu;platform.driver.det;platform.driver.osif;platform.driver.siul2_port;platform.driver.rte_port;platform.driver.pit;platform.driver.rte_gpt;platform.driver.lpuart_uart;platform.driver.rte_uart;platform.driver.rte_mcl;platform.driver.flexio_mcl;platform.driver.emios_pwm;platform.driver.rte_pwm;platform.driver.emios_mcl</sdkComponents>
 	</storageModule>
 	<storageModule moduleId="com.nxp.s32ds.cle.uct.internal.core.toolchainSettings">
 		<COND_TOOLCHAIN_LIBRARIES/>
@@ -735,6 +735,6 @@
 		<COND_TOOLCHAIN_CUSTOM_OPTION/>
 	</storageModule>
 	<storageModule moduleId="com.nxp.s32ds.cle.uct.internal.core.toolchainScriptProfile">
-		<COND_TOOLCHAIN_COMPONENTS_OPTION>COPY=platform.driver.siul2_dio;platform.driver.pit;platform.driver.clock;platform.driver.osif;platform.driver.FlexCAN;platform.driver.IntCtrl_Ip;platform.driver.lpuart_uart;platform.driver.siul2_port</COND_TOOLCHAIN_COMPONENTS_OPTION>
+		<COND_TOOLCHAIN_COMPONENTS_OPTION>COPY=platform.driver.siul2_dio;platform.driver.pit;platform.driver.clock;platform.driver.osif;platform.driver.emios_pwm;platform.driver.emios_mcl;platform.driver.FlexCAN;platform.driver.IntCtrl_Ip;platform.driver.lpuart_uart;platform.driver.siul2_port;platform.driver.flexio_mcl</COND_TOOLCHAIN_COMPONENTS_OPTION>
 	</storageModule>
 </cproject>

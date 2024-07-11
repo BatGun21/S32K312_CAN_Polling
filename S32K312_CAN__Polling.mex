@@ -382,6 +382,36 @@
                   <data type="Version">1.0.0</data>
                </feature>
             </dependency>
+            <dependency resourceType="SWComponent" resourceId="platform.driver.flexio_mcl" description="flexio_mcl is not found in the toolchain/IDE project. The project will not compile!" problem_level="2" source="Peripherals">
+               <feature name="enabled" evaluation="equal">
+                  <data type="Boolean">true</data>
+               </feature>
+            </dependency>
+            <dependency resourceType="SWComponent" resourceId="platform.driver.flexio_mcl" description="An unsupported version of the flexio_mcl in the toolchain/IDE project. Required: ${required_value}, actual: ${actual_value}. The project might not compile correctly." problem_level="1" source="Peripherals">
+               <feature name="version" evaluation="equivalent">
+                  <data type="Version">1.0.0</data>
+               </feature>
+            </dependency>
+            <dependency resourceType="SWComponent" resourceId="platform.driver.emios_pwm" description="emios_pwm is not found in the toolchain/IDE project. The project will not compile!" problem_level="2" source="Peripherals">
+               <feature name="enabled" evaluation="equal">
+                  <data type="Boolean">true</data>
+               </feature>
+            </dependency>
+            <dependency resourceType="SWComponent" resourceId="platform.driver.emios_pwm" description="An unsupported version of the emios_pwm in the toolchain/IDE project. Required: ${required_value}, actual: ${actual_value}. The project might not compile correctly." problem_level="1" source="Peripherals">
+               <feature name="version" evaluation="equivalent">
+                  <data type="Version">1.0.0</data>
+               </feature>
+            </dependency>
+            <dependency resourceType="SWComponent" resourceId="platform.driver.emios_mcl" description="emios_mcl is not found in the toolchain/IDE project. The project will not compile!" problem_level="2" source="Peripherals">
+               <feature name="enabled" evaluation="equal">
+                  <data type="Boolean">true</data>
+               </feature>
+            </dependency>
+            <dependency resourceType="SWComponent" resourceId="platform.driver.emios_mcl" description="An unsupported version of the emios_mcl in the toolchain/IDE project. Required: ${required_value}, actual: ${actual_value}. The project might not compile correctly." problem_level="1" source="Peripherals">
+               <feature name="version" evaluation="equivalent">
+                  <data type="Version">1.0.0</data>
+               </feature>
+            </dependency>
             <dependency resourceType="Tool" resourceId="Clocks" description="The Clocks tool is required by the Peripherals tool, but it is disabled." problem_level="2" source="Peripherals">
                <feature name="enabled" evaluation="equal">
                   <data>true</data>
@@ -389,9 +419,20 @@
             </dependency>
          </dependencies>
          <generated_project_files>
+            <file path="generate/include/Emios_Mcl_Ip_Cfg.h" update_enabled="true"/>
+            <file path="generate/include/Emios_Mcl_Ip_Cfg_Defines.h" update_enabled="true"/>
+            <file path="generate/include/Emios_Mcl_Ip_Cfg_DeviceRegisters.h" update_enabled="true"/>
+            <file path="generate/include/Emios_Mcl_Ip_PBcfg.h" update_enabled="true"/>
+            <file path="generate/include/Emios_Pwm_Ip_Cfg.h" update_enabled="true"/>
+            <file path="generate/include/Emios_Pwm_Ip_CfgDefines.h" update_enabled="true"/>
+            <file path="generate/include/Emios_Pwm_Ip_PBcfg.h" update_enabled="true"/>
             <file path="generate/include/FlexCAN_Ip_Cfg.h" update_enabled="true"/>
             <file path="generate/include/FlexCAN_Ip_CfgDefines.h" update_enabled="true"/>
             <file path="generate/include/FlexCAN_Ip_Sa_PBcfg.h" update_enabled="true"/>
+            <file path="generate/include/Flexio_Mcl_Ip_Cfg.h" update_enabled="true"/>
+            <file path="generate/include/Flexio_Mcl_Ip_Cfg_Defines.h" update_enabled="true"/>
+            <file path="generate/include/Flexio_Mcl_Ip_Cfg_DeviceRegisters.h" update_enabled="true"/>
+            <file path="generate/include/Flexio_Mcl_Ip_PBcfg.h" update_enabled="true"/>
             <file path="generate/include/IntCtrl_Ip_Cfg.h" update_enabled="true"/>
             <file path="generate/include/IntCtrl_Ip_CfgDefines.h" update_enabled="true"/>
             <file path="generate/include/Lpuart_Uart_Ip_Cfg.h" update_enabled="true"/>
@@ -405,7 +446,10 @@
             <file path="generate/include/Siul2_Dio_Ip_Cfg.h" update_enabled="true"/>
             <file path="generate/include/Siul2_Port_Ip_Defines.h" update_enabled="true"/>
             <file path="generate/include/modules.h" update_enabled="true"/>
+            <file path="generate/src/Emios_Mcl_Ip_PBcfg.c" update_enabled="true"/>
+            <file path="generate/src/Emios_Pwm_Ip_PBcfg.c" update_enabled="true"/>
             <file path="generate/src/FlexCAN_Ip_Sa_PBcfg.c" update_enabled="true"/>
+            <file path="generate/src/Flexio_Mcl_Ip_PBcfg.c" update_enabled="true"/>
             <file path="generate/src/IntCtrl_Ip_Cfg.c" update_enabled="true"/>
             <file path="generate/src/Lpuart_Uart_Ip_Sa_PBcfg.c" update_enabled="true"/>
             <file path="generate/src/OsIf_Cfg.c" update_enabled="true"/>
@@ -756,6 +800,130 @@
                               </struct>
                            </array>
                         </struct>
+                     </config_set>
+                  </instance>
+                  <instance name="Flexio_Mcl_Ip" uuid="0f532e7b-bcdc-4cfd-a3c7-44107adb671b" type="Flexio_Mcl_Ip" type_id="Flexio_Mcl_Ip" mode="flexio_mcl" enabled="true" comment="" custom_name_enabled="false" editing_lock="false">
+                     <config_set name="Flexio_Mcl_Ip">
+                        <setting name="Name" value="FlexioMcl"/>
+                        <struct name="ConfigTimeSupport">
+                           <setting name="POST_BUILD_VARIANT_USED" value="false"/>
+                           <setting name="IMPLEMENTATION_CONFIG_VARIANT" value="VARIANT-POST-BUILD"/>
+                        </struct>
+                        <struct name="MclGeneral">
+                           <setting name="Name" value="MclGeneral"/>
+                           <setting name="MclEnableUserModeSupport" value="false"/>
+                           <struct name="MclFlexioCommon">
+                              <setting name="Name" value="MclFlexioCommon"/>
+                              <setting name="MclEnableFlexioCommon" value="true"/>
+                              <setting name="MclEnableFlexioDevErrorDetect" value="false"/>
+                           </struct>
+                        </struct>
+                        <struct name="MclConfig">
+                           <setting name="Name" value="MclConfig"/>
+                           <array name="FlexioCommon">
+                              <struct name="0">
+                                 <setting name="Name" value="FlexioCommon_0"/>
+                                 <setting name="FlexioMclInstances" value="FLEXIO_0"/>
+                                 <setting name="FlexioDebugEnable" value="false"/>
+                                 <array name="FlexioMclLogicChannels">
+                                    <struct name="0">
+                                       <setting name="Name" value="FlexioMclLogicChannels_0"/>
+                                       <setting name="FlexioMclChannelId" value="CHANNEL_0"/>
+                                       <setting name="FlexioMclPinId" value="PIN_0"/>
+                                       <setting name="FlexioMclAddPinEnable" value="false"/>
+                                       <setting name="FlexioMclAddPinId" value="PIN_0"/>
+                                       <setting name="FlexioMclAddChannelEnable" value="false"/>
+                                       <setting name="FlexioMclAddChannelId" value="CHANNEL_0"/>
+                                    </struct>
+                                 </array>
+                              </struct>
+                           </array>
+                        </struct>
+                     </config_set>
+                  </instance>
+                  <instance name="Emios_Pwm" uuid="5a829559-ac03-47e5-9459-4806b577ec33" type="Emios_Pwm" type_id="Emios_Pwm" mode="ip" enabled="true" comment="" custom_name_enabled="false" editing_lock="false">
+                     <config_set name="Emios_Pwm" quick_selection="emiosPwmQs">
+                        <struct name="ConfigTimeSupport">
+                           <setting name="POST_BUILD_VARIANT_USED" value="false"/>
+                           <setting name="IMPLEMENTATION_CONFIG_VARIANT" value="VARIANT-POST-BUILD"/>
+                        </struct>
+                        <struct name="PwmGeneral">
+                           <setting name="Name" value="PwmGeneral"/>
+                           <setting name="PwmDevErrorDetect" value="false"/>
+                        </struct>
+                        <array name="PwmEmios">
+                           <struct name="0">
+                              <setting name="Name" value="PwmEmios_0"/>
+                              <setting name="PwmHwInstance" value="Emios_0"/>
+                              <array name="PwmEmiosChannels">
+                                 <struct name="0">
+                                    <setting name="Name" value="PwmEmiosChannels_0"/>
+                                    <setting name="EmiosChId" value="CH_0"/>
+                                    <setting name="EmiosChMode" value="EMIOS_PWM_IP_MODE_OPWFMB"/>
+                                    <setting name="EmiosChFlagGeneration" value="Trailing_Edge"/>
+                                    <setting name="EmiosChCounterBus" value="EMIOS_PWM_IP_BUS_INTERNAL"/>
+                                    <array name="PwmEmiosBusRef"/>
+                                    <setting name="EmiosChFreeze" value="false"/>
+                                    <setting name="EmiosChOutputDisable" value="EMIOS_PWM_IP_OUTPUT_DISABLE_NONE"/>
+                                    <setting name="EmiosChPrescaler" value="EMIOS_PWM_IP_CLOCK_DIV_2"/>
+                                    <setting name="EmiosChPrescalerAlternate" value="EMIOS_PWM_IP_CLOCK_DIV_2"/>
+                                    <setting name="EmiosChPrescalerSource" value="EMIOS_PWM_IP_PS_SRC_MODULE_CLOCK"/>
+                                    <setting name="EmiosChPolarity" value="EMIOS_PWM_IP_ACTIVE_HIGH"/>
+                                    <setting name="EmiosChInterrupt" value="EMIOS_PWM_IP_NOTIFICATION_DISABLED"/>
+                                    <struct name="EmiosChIrqCallback">
+                                       <setting name="Name" value="EmiosChIrqCallback"/>
+                                       <setting name="EmiosChIrqFunctionCallback" value="NULL_PTR"/>
+                                       <setting name="EmiosChIrqParameterCallback" value="NULL_PTR"/>
+                                    </struct>
+                                    <setting name="EmiosChDutyCycle" value="32768"/>
+                                    <setting name="EmiosChPeriod" value="65534"/>
+                                    <setting name="EmiosChPhaseShift" value="0"/>
+                                    <setting name="EmiosChTrigger" value="0"/>
+                                    <setting name="EmiosChDeadtime" value="0"/>
+                                 </struct>
+                              </array>
+                           </struct>
+                        </array>
+                        <setting name="Name" value="Emios_Pwm"/>
+                     </config_set>
+                  </instance>
+                  <instance name="Emios_Mcl_Ip" uuid="9035f870-5f14-459f-9335-a75c0a336ff8" type="Emios_Mcl_Ip" type_id="Emios_Mcl_Ip" mode="emios_mcl" enabled="true" comment="" custom_name_enabled="false" editing_lock="false">
+                     <config_set name="Emios_Mcl_Ip">
+                        <setting name="Name" value="EmiosMcl"/>
+                        <struct name="ConfigTimeSupport">
+                           <setting name="POST_BUILD_VARIANT_USED" value="false"/>
+                           <setting name="IMPLEMENTATION_CONFIG_VARIANT" value="VARIANT-POST-BUILD"/>
+                        </struct>
+                        <struct name="MclGeneral">
+                           <setting name="Name" value="MclGeneral"/>
+                           <setting name="MclEnableDevErrorDetect" value="true"/>
+                           <struct name="MclEmiosCommon">
+                              <setting name="Name" value="MclEmiosCommon"/>
+                              <setting name="MclEnableEmiosCommon" value="false"/>
+                           </struct>
+                        </struct>
+                        <array name="EmiosCommon">
+                           <struct name="0">
+                              <setting name="Name" value="EmiosCommon_0"/>
+                              <setting name="EmiosMclInstances" value="EMIOS_0"/>
+                              <setting name="EmiosMclEnableFreezState" value="true"/>
+                              <setting name="EmiosMclEnableGlobalTimeBase" value="true"/>
+                              <setting name="EmiosMclClkDivVal" value="1"/>
+                              <array name="EmiosMclMasterBus">
+                                 <struct name="0">
+                                    <setting name="Name" value="EMIOS_0_MasteBus0"/>
+                                    <setting name="EmiosMclMasterBusNumber" value="EMIOS_CH_0"/>
+                                    <setting name="EmiosMclMasterBusModeType" value="MC_UP_COUNTER_START"/>
+                                    <setting name="EmiosMclDefaultPeriod" value="1"/>
+                                    <setting name="EmiosMclFirstOffsetValue" value="0"/>
+                                    <setting name="EmiosMclMasterBusPrescaler" value="DIV_1"/>
+                                    <setting name="EmiosMclMasterBusAltPrescaler" value="DIV_1"/>
+                                    <setting name="EmiosMclChannelAllowDebugMode" value="true"/>
+                                    <setting name="EmiosMclPwmExclusiveAccess" value="false"/>
+                                 </struct>
+                              </array>
+                           </struct>
+                        </array>
                      </config_set>
                   </instance>
                </instances>
