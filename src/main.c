@@ -12,9 +12,21 @@
 #include <string.h>
 #include <stdio.h>
 
-#define MSG_ID 0x55
-#define MSG_ID_RX 0x11
-#define RX_MB_IDX 1U
+#define MSG_ID_RX_1 0x350U
+#define MSG_ID_RX_2 0xECC01U
+#define MSG_ID_RX_3 0x361U
+#define MSG_ID_RX_4 0x360U
+#define MSG_ID_RX_5 0xECC02U
+
+#define RX_MB_IDX_1 1U
+#define RX_MB_IDX_2 2U
+#define RX_MB_IDX_3 3U
+#define RX_MB_IDX_4 4U
+#define RX_MB_IDX_5 5U
+
+Flexcan_Ip_MsgBuffType rxData1, rxData2, rxData3, rxData4, rxData5;
+
+
 #define TX_MB_IDX 0U
 #define LPUART_UART_INSTANCE    0
 #define BUFFER_SIZE            100
@@ -51,32 +63,19 @@ typedef struct {
     const char *description;
 } CAN_TestCase;
 
-CAN_TestCase txTestCases[] = {
-    {0x350, {0x01, 0x00, 0x00, 0x32, 0x00, 0xFF, 0x00, 0x10}, 8, "Test EVCC Status and CP Duty Cycle"},
-    {0x351, {0x02, 0x01, 0x00, 0x33, 0x00, 0xFE, 0x00, 0x11}, 8, "Test Case 2"},
-    {0x352, {0x03, 0x02, 0x00, 0x34, 0x00, 0xFD, 0x00, 0x12}, 8, "Test Case 3"},
-    {0x353, {0x04, 0x03, 0x00, 0x35, 0x00, 0xFC, 0x00, 0x13}, 8, "Test Case 4"},
-    {0x354, {0x05, 0x04, 0x00, 0x36, 0x00, 0xFB, 0x00, 0x14}, 8, "Test Case 5"},
-    {0x355, {0x06, 0x05, 0x00, 0x37, 0x00, 0xFA, 0x00, 0x15}, 8, "Test Case 6"},
-    {0x356, {0x07, 0x06, 0x00, 0x38, 0x00, 0xF9, 0x00, 0x16}, 8, "Test Case 7"},
-    {0x357, {0x08, 0x07, 0x00, 0x39, 0x00, 0xF8, 0x00, 0x17}, 8, "Test Case 8"},
-};
-
-
-CAN_TestCase rxTestCases[] = {
-    {0x310, {0x00, 0x00, 0x50, 0x00, 0xFA, 0x03, 0x00, 0x00}, 8, "Test EV Maximum Charging Current Limit and SOC"},
-    {0x311, {0x00, 0x01, 0x51, 0x00, 0xFB, 0x04, 0x00, 0x01}, 8, "Test Case 2"},
-    {0x312, {0x00, 0x02, 0x52, 0x00, 0xFC, 0x05, 0x00, 0x02}, 8, "Test Case 3"},
-    {0x313, {0x00, 0x03, 0x53, 0x00, 0xFD, 0x06, 0x00, 0x03}, 8, "Test Case 4"},
-    {0x314, {0x00, 0x04, 0x54, 0x00, 0xFE, 0x07, 0x00, 0x04}, 8, "Test Case 5"},
-    {0x315, {0x00, 0x05, 0x55, 0x00, 0xFF, 0x08, 0x00, 0x05}, 8, "Test Case 6"},
-    {0x316, {0x00, 0x06, 0x56, 0x00, 0xF0, 0x09, 0x00, 0x06}, 8, "Test Case 7"},
-    {0x317, {0x00, 0x07, 0x57, 0x00, 0xF1, 0x0A, 0x00, 0x07}, 8, "Test Case 8"},
-};
-
-
+CAN_TestCase txTestCases = {0x310, {0x01, 0x00, 0x00, 0x32, 0x00, 0xFF, 0x00, 0x10}, 8, "Test Case 1"};
 
 extern ISR(PIT_0_ISR);
+void PIT_Init(void);
+void PitNotification(void);
+void Clock_Init(void);
+void LED_Init(void);
+void LPUART_Init(void);
+void UART_Error_Handler(Lpuart_Uart_Ip_StatusType Status);
+void CAN_Init(void);
+void sendCANMessage(CAN_TestCase *testCase);
+void processCANMessage(Flexcan_Ip_StatusType canStatus, Flexcan_Ip_MsgBuffType *rxData, const char *msgIdStr);
+void receiveCANMessage(void);
 
 void PitNotification(void)
 {
@@ -148,6 +147,51 @@ void UART_Error_Handler(Lpuart_Uart_Ip_StatusType Status)
     }
 }
 
+void CAN_Init(void)
+{
+    FlexCAN_Ip_Init(INST_FLEXCAN_0, &FlexCAN_State0, &FlexCAN_Config0);
+
+    FlexCAN_Ip_EnterFreezeMode(INST_FLEXCAN_0);
+
+    rx_info.msg_id_type = FLEXCAN_MSG_ID_EXT;  // Set to extended ID type
+    rx_info.data_length = 8;
+    rx_info.is_polling = TRUE;
+    rx_info.is_remote = FALSE;
+
+    // Configure RX message buffers for each ID
+    FlexCAN_Ip_ConfigRxMb(INST_FLEXCAN_0, RX_MB_IDX_1, &rx_info, MSG_ID_RX_1);
+    FlexCAN_Ip_ConfigRxMb(INST_FLEXCAN_0, RX_MB_IDX_2, &rx_info, MSG_ID_RX_2);
+    FlexCAN_Ip_ConfigRxMb(INST_FLEXCAN_0, RX_MB_IDX_3, &rx_info, MSG_ID_RX_3);
+    FlexCAN_Ip_ConfigRxMb(INST_FLEXCAN_0, RX_MB_IDX_4, &rx_info, MSG_ID_RX_4);
+    FlexCAN_Ip_ConfigRxMb(INST_FLEXCAN_0, RX_MB_IDX_5, &rx_info, MSG_ID_RX_5);
+
+    FlexCAN_Ip_ExitFreezeMode(INST_FLEXCAN_0);
+}
+
+void processCANMessage(Flexcan_Ip_StatusType canStatus, Flexcan_Ip_MsgBuffType *rxData, const char *msgIdStr)
+{
+    if (canStatus == FLEXCAN_STATUS_SUCCESS)
+    {
+        snprintf((char *)uartString, BUFFER_SIZE, "Received CAN ID %s: 0x%08lX, Data: ", msgIdStr, rxData->msgId);
+        for (uint8_t i = 0; i < rxData->dataLen; i++)
+        {
+            char byteStr[4];
+            snprintf(byteStr, sizeof(byteStr), "%02X ", rxData->data[i]);
+            strncat((char *)uartString, byteStr, BUFFER_SIZE - strlen((char *)uartString) - 1);
+        }
+        strncat((char *)uartString, "\r\n", BUFFER_SIZE - strlen((char *)uartString) - 1);
+        Lpuart_Uart_Ip_StatusType Uart_status = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+        UART_Error_Handler(Uart_status);
+    }
+    else if (canStatus == FLEXCAN_STATUS_TIMEOUT)
+    {
+        snprintf((char *)uartString, BUFFER_SIZE, "CAN receive timeout for ID %s: %d\r\n", msgIdStr, canStatus);
+        Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+        UART_Error_Handler(LPUART_UART_IP_STATUS_ERROR);
+    }
+}
+
+
 void sendCANMessage(CAN_TestCase *testCase)
 {
     Flexcan_Ip_DataInfoType tx_info = {
@@ -164,59 +208,21 @@ void sendCANMessage(CAN_TestCase *testCase)
     }
 }
 
-
 void receiveCANMessage(void)
 {
-    Flexcan_Ip_StatusType canStatus = FlexCAN_Ip_ReceiveBlocking(INST_FLEXCAN_0, RX_MB_IDX, &rxData, TRUE, 100000);
+    Flexcan_Ip_StatusType canStatus1 = FlexCAN_Ip_ReceiveBlocking(INST_FLEXCAN_0, RX_MB_IDX_1, &rxData1, TRUE, 100000);
+    Flexcan_Ip_StatusType canStatus2 = FlexCAN_Ip_ReceiveBlocking(INST_FLEXCAN_0, RX_MB_IDX_2, &rxData2, TRUE, 100000);
+    Flexcan_Ip_StatusType canStatus3 = FlexCAN_Ip_ReceiveBlocking(INST_FLEXCAN_0, RX_MB_IDX_3, &rxData3, TRUE, 100000);
+    Flexcan_Ip_StatusType canStatus4 = FlexCAN_Ip_ReceiveBlocking(INST_FLEXCAN_0, RX_MB_IDX_4, &rxData4, TRUE, 100000);
+    Flexcan_Ip_StatusType canStatus5 = FlexCAN_Ip_ReceiveBlocking(INST_FLEXCAN_0, RX_MB_IDX_5, &rxData5, TRUE, 100000);
 
-    if (canStatus == FLEXCAN_STATUS_SUCCESS)
-    {
-        snprintf((char *)uartString, BUFFER_SIZE, "Received CAN ID: 0x%08lX, Data: ", rxData.msgId);
-        for (uint8_t i = 0; i < rxData.dataLen; i++)
-        {
-            char byteStr[4]; // Space for two hex digits and a space or null terminator
-            snprintf(byteStr, sizeof(byteStr), "%02X ", rxData.data[i]);
-            strncat((char *)uartString, byteStr, BUFFER_SIZE - strlen((char *)uartString) - 1);
-        }
-        strncat((char *)uartString, "\r\n", BUFFER_SIZE - strlen((char *)uartString) - 1); // Add a new line at the end
-
-        Lpuart_Uart_Ip_StatusType Uart_status = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
-
-        UART_Error_Handler(Uart_status);
-    }
+    processCANMessage(canStatus1, &rxData1, "0x350");
+    processCANMessage(canStatus2, &rxData2, "0xECC01");
+    processCANMessage(canStatus3, &rxData3, "0x361");
+    processCANMessage(canStatus4, &rxData4, "0x360");
+    processCANMessage(canStatus5, &rxData5, "0xECC02");
 }
 
-
-void CAN_Init(void)
-{
-    FlexCAN_Ip_Init(INST_FLEXCAN_0, &FlexCAN_State0, &FlexCAN_Config0);
-
-    FlexCAN_Ip_EnterFreezeMode(INST_FLEXCAN_0);
-    rx_info.msg_id_type = FLEXCAN_MSG_ID_STD;
-    rx_info.data_length = 8;
-    rx_info.is_polling = TRUE;
-    rx_info.is_remote = FALSE;
-    FlexCAN_Ip_ConfigRxMb(INST_FLEXCAN_0, RX_MB_IDX, &rx_info, MSG_ID_RX);
-    FlexCAN_Ip_ExitFreezeMode(INST_FLEXCAN_0);
-}
-
-void testEVCC(void)
-{
-    char logMessage[BUFFER_SIZE];
-    Lpuart_Uart_Ip_StatusType Uart_status;
-
-    for (size_t i = 0; i < sizeof(txTestCases) / sizeof(txTestCases[0]); i++)
-    {
-    	snprintf(logMessage, sizeof(logMessage), "Sending Test Case %zu: %s\n", i + 1, txTestCases[i].description);
-
-        Uart_status = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)logMessage, strlen(logMessage), 50000000);
-        UART_Error_Handler(Uart_status);
-
-        sendCANMessage(&txTestCases[i]);
-
-        receiveCANMessage();
-    }
-}
 
 
 void PIT_Init(void)
@@ -256,12 +262,10 @@ int main(void)
     Uart_status = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (uint8_t *)"Lets read some CAN messages here:", strlen("Lets read some CAN messages here:"), 50000000);
     UART_Error_Handler(Uart_status);
 
-    testEVCC();
 
     while (1)
     {
-        receiveCANMessage();
-        testEVCC();
+    	receiveCANMessage();
     }
 
     return 0;

@@ -24,6 +24,9 @@ C_SRCS += \
 ../RTD/src/FlexCAN_Ip.c \
 ../RTD/src/FlexCAN_Ip_HwAccess.c \
 ../RTD/src/FlexCAN_Ip_Irq.c \
+../RTD/src/Flexio_Mcl_Ip.c \
+../RTD/src/Flexio_Mcl_Ip_HwAccess.c \
+../RTD/src/Flexio_Mcl_Ip_Irq.c \
 ../RTD/src/Igf_Port_Ip.c \
 ../RTD/src/IntCtrl_Ip.c \
 ../RTD/src/Lpuart_Uart_Ip.c \
@@ -36,6 +39,7 @@ C_SRCS += \
 ../RTD/src/SchM_Can_43_FLEXCAN.c \
 ../RTD/src/SchM_Dio.c \
 ../RTD/src/SchM_Gpt.c \
+../RTD/src/SchM_Mcl.c \
 ../RTD/src/SchM_Mcu.c \
 ../RTD/src/SchM_Port.c \
 ../RTD/src/SchM_Uart.c \
@@ -64,6 +68,9 @@ OBJS += \
 ./RTD/src/FlexCAN_Ip.o \
 ./RTD/src/FlexCAN_Ip_HwAccess.o \
 ./RTD/src/FlexCAN_Ip_Irq.o \
+./RTD/src/Flexio_Mcl_Ip.o \
+./RTD/src/Flexio_Mcl_Ip_HwAccess.o \
+./RTD/src/Flexio_Mcl_Ip_Irq.o \
 ./RTD/src/Igf_Port_Ip.o \
 ./RTD/src/IntCtrl_Ip.o \
 ./RTD/src/Lpuart_Uart_Ip.o \
@@ -76,6 +83,7 @@ OBJS += \
 ./RTD/src/SchM_Can_43_FLEXCAN.o \
 ./RTD/src/SchM_Dio.o \
 ./RTD/src/SchM_Gpt.o \
+./RTD/src/SchM_Mcl.o \
 ./RTD/src/SchM_Mcu.o \
 ./RTD/src/SchM_Port.o \
 ./RTD/src/SchM_Uart.o \
@@ -104,6 +112,9 @@ C_DEPS += \
 ./RTD/src/FlexCAN_Ip.d \
 ./RTD/src/FlexCAN_Ip_HwAccess.d \
 ./RTD/src/FlexCAN_Ip_Irq.d \
+./RTD/src/Flexio_Mcl_Ip.d \
+./RTD/src/Flexio_Mcl_Ip_HwAccess.d \
+./RTD/src/Flexio_Mcl_Ip_Irq.d \
 ./RTD/src/Igf_Port_Ip.d \
 ./RTD/src/IntCtrl_Ip.d \
 ./RTD/src/Lpuart_Uart_Ip.d \
@@ -116,6 +127,7 @@ C_DEPS += \
 ./RTD/src/SchM_Can_43_FLEXCAN.d \
 ./RTD/src/SchM_Dio.d \
 ./RTD/src/SchM_Gpt.d \
+./RTD/src/SchM_Mcl.d \
 ./RTD/src/SchM_Mcu.d \
 ./RTD/src/SchM_Port.d \
 ./RTD/src/SchM_Uart.d \

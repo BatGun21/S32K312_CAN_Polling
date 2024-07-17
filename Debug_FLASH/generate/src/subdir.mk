@@ -6,6 +6,7 @@
 C_SRCS += \
 ../generate/src/Clock_Ip_Cfg.c \
 ../generate/src/FlexCAN_Ip_Sa_PBcfg.c \
+../generate/src/Flexio_Mcl_Ip_PBcfg.c \
 ../generate/src/Igf_Port_Ip_Cfg.c \
 ../generate/src/IntCtrl_Ip_Cfg.c \
 ../generate/src/Lpuart_Uart_Ip_Sa_PBcfg.c \
@@ -15,6 +16,7 @@ C_SRCS += \
 OBJS += \
 ./generate/src/Clock_Ip_Cfg.o \
 ./generate/src/FlexCAN_Ip_Sa_PBcfg.o \
+./generate/src/Flexio_Mcl_Ip_PBcfg.o \
 ./generate/src/Igf_Port_Ip_Cfg.o \
 ./generate/src/IntCtrl_Ip_Cfg.o \
 ./generate/src/Lpuart_Uart_Ip_Sa_PBcfg.o \
@@ -24,6 +26,7 @@ OBJS += \
 C_DEPS += \
 ./generate/src/Clock_Ip_Cfg.d \
 ./generate/src/FlexCAN_Ip_Sa_PBcfg.d \
+./generate/src/Flexio_Mcl_Ip_PBcfg.d \
 ./generate/src/Igf_Port_Ip_Cfg.d \
 ./generate/src/IntCtrl_Ip_Cfg.d \
 ./generate/src/Lpuart_Uart_Ip_Sa_PBcfg.d \
