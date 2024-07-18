@@ -65,6 +65,7 @@ typedef struct {
 
 CAN_Msg SendMsgInstances = {0x310, {0x01, 0x00, 0x00, 0x32, 0x00, 0xFF, 0x00, 0x10}, 8, "Test Case 1"};
 
+
 extern ISR(PIT_0_ISR);
 void PIT_Init(void);
 void PitNotification(void);
@@ -260,11 +261,11 @@ int main(void)
     Uart_status = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (uint8_t *)"Lets read some CAN messages here:", strlen("Lets read some CAN messages here:"), 50000000);
     UART_Error_Handler(Uart_status);
 
-
     while (1)
     {
     	receiveCANMessage();
-    }
+    }    
+
 
     return 0;
 }
