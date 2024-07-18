@@ -61,9 +61,9 @@ typedef struct {
     uint8 data[8];
     uint8 dataLen;
     const char *description;
-} CAN_TestCase;
+} CAN_Msg;
 
-CAN_TestCase txTestCases = {0x310, {0x01, 0x00, 0x00, 0x32, 0x00, 0xFF, 0x00, 0x10}, 8, "Test Case 1"};
+CAN_Msg SendMsgInstances = {0x310, {0x01, 0x00, 0x00, 0x32, 0x00, 0xFF, 0x00, 0x10}, 8, "Test Case 1"};
 
 extern ISR(PIT_0_ISR);
 void PIT_Init(void);
@@ -73,7 +73,7 @@ void LED_Init(void);
 void LPUART_Init(void);
 void UART_Error_Handler(Lpuart_Uart_Ip_StatusType Status);
 void CAN_Init(void);
-void sendCANMessage(CAN_TestCase *testCase);
+void sendCANMessage(CAN_Msg *SendMsg);
 void processCANMessage(Flexcan_Ip_StatusType canStatus, Flexcan_Ip_MsgBuffType *rxData, const char *msgIdStr);
 void receiveCANMessage(void);
 
@@ -192,16 +192,16 @@ void processCANMessage(Flexcan_Ip_StatusType canStatus, Flexcan_Ip_MsgBuffType *
 }
 
 
-void sendCANMessage(CAN_TestCase *testCase)
+void sendCANMessage(CAN_Msg *SendMsg)
 {
     Flexcan_Ip_DataInfoType tx_info = {
         .msg_id_type = FLEXCAN_MSG_ID_STD,
-        .data_length = testCase->dataLen,
+        .data_length = SendMsg->dataLen,
         .is_polling = TRUE,
         .is_remote = FALSE
     };
 
-    FlexCAN_Ip_Send(INST_FLEXCAN_0, TX_MB_IDX, &tx_info, testCase->msgId, testCase->data);
+    FlexCAN_Ip_Send(INST_FLEXCAN_0, TX_MB_IDX, &tx_info, SendMsg->msgId, SendMsg->data);
     while (FlexCAN_Ip_GetTransferStatus(INST_FLEXCAN_0, TX_MB_IDX) != FLEXCAN_STATUS_SUCCESS)
     {
         FlexCAN_Ip_MainFunctionWrite(INST_FLEXCAN_0, TX_MB_IDX);
@@ -222,8 +222,6 @@ void receiveCANMessage(void)
     processCANMessage(canStatus4, &rxData4, "0x360");
     processCANMessage(canStatus5, &rxData5, "0xECC02");
 }
-
-
 
 void PIT_Init(void)
 {
