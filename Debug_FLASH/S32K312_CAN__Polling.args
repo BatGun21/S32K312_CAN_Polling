@@ -70,7 +70,11 @@
 "./generate/src/Lpuart_Uart_Ip_Sa_PBcfg.o"
 "./generate/src/OsIf_Cfg.o"
 "./generate/src/Pit_Ip_PBcfg.o"
+"./src/butl/evcc_ecudb-binutil.o"
+"./src/butl/vector__xxx_ecudb-binutil.o"
+"./src/lib/ecudb.o"
 "./src/main.o"
+"./src/usr/ecudb-fmon.o"
 -lc
 -lm
 -lgcc

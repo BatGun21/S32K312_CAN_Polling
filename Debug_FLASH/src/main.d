@@ -142,7 +142,14 @@ src/main.o: ../src/main.c \
  C\:/NXP/S32DS.3.5/S32DS/software/PlatformSDK_S32K3/RTD/BaseNXP_TS_T40D34M30I0R0/include/Uart_MemMap.h \
  C\:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/generate/include/Lpuart_Uart_Ip_Cfg.h \
  C\:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/generate/include/Lpuart_Uart_Ip_Sa_PBcfg.h \
- ../RTD/include/Lpuart_Uart_Ip_Types.h
+ ../RTD/include/Lpuart_Uart_Ip_Types.h \
+ C\:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/src/lib/ecudb.h \
+ C\:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/src/conf/ecudb-config.h \
+ C\:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/src/conf/dbccodeconf.h \
+ C\:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/src/lib/ecudb-fmon.h \
+ C\:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/src/butl/evcc_ecudb-binutil.h \
+ C\:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/src/butl/vector__xxx_ecudb-binutil.h \
+ C\:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/src/inc/canmonitorutil.h
 C\:/NXP/S32DS.3.5/S32DS/software/PlatformSDK_S32K3/RTD/BaseNXP_TS_T40D34M30I0R0/include/Mcal.h:
 C\:/NXP/S32DS.3.5/S32DS/software/PlatformSDK_S32K3/RTD/BaseNXP_TS_T40D34M30I0R0/include/Compiler.h:
 C\:/NXP/S32DS.3.5/S32DS/software/PlatformSDK_S32K3/RTD/BaseNXP_TS_T40D34M30I0R0/include/Compiler_Cfg.h:
@@ -293,3 +300,10 @@ C\:/NXP/S32DS.3.5/S32DS/software/PlatformSDK_S32K3/RTD/BaseNXP_TS_T40D34M30I0R0/
 C\:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/generate/include/Lpuart_Uart_Ip_Cfg.h:
 C\:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/generate/include/Lpuart_Uart_Ip_Sa_PBcfg.h:
 ../RTD/include/Lpuart_Uart_Ip_Types.h:
+C\:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/src/lib/ecudb.h:
+C\:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/src/conf/ecudb-config.h:
+C\:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/src/conf/dbccodeconf.h:
+C\:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/src/lib/ecudb-fmon.h:
+C\:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/src/butl/evcc_ecudb-binutil.h:
+C\:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/src/butl/vector__xxx_ecudb-binutil.h:
+C\:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/src/inc/canmonitorutil.h:

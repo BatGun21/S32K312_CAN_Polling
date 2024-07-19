@@ -1,0 +1,175 @@
+VERSION ""
+
+
+NS_ : 
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	CAT_DEF_
+	CAT_
+	FILTER
+	BA_DEF_DEF_
+	EV_DATA_
+	ENVVAR_DATA_
+	SGTYPE_
+	SGTYPE_VAL_
+	BA_DEF_SGTYPE_
+	BA_SGTYPE_
+	SIG_TYPE_REF_
+	VAL_TABLE_
+	SIG_GROUP_
+	SIG_VALTYPE_
+	SIGTYPE_VALTYPE_
+	BO_TX_BU_
+	BA_DEF_REL_
+	BA_REL_
+	BA_DEF_DEF_REL_
+	BU_SG_REL_
+	BU_EV_REL_
+	BU_BO_REL_
+	SG_MUL_VAL_
+
+BS_:
+
+BU_: EVCC
+VAL_TABLE_ EVCC_GUN_Unlock_Status 1 "GUN Unlock Req Pending" 0 "GUN Unlock Req Processed" ;
+VAL_TABLE_ EVCC_GUN_Lock_Status 1 "GUN Lock Req Pending" 0 "GUN Lock Req Processed" ;
+VAL_TABLE_ App_Protocol_Priority_Selection 1 "ISO 15118-2:2013" 0 "DIN SPEC 70121:2014" ;
+VAL_TABLE_ Force_Actuator_Unlock 1 "Actuator Unlock ENABLE" 0 "Actuator Unlock DISABLE" ;
+VAL_TABLE_ HV_Ready 1 "Vehicle HV Isolation OK" 0 "Vehicle HV Isolation Failure" ;
+VAL_TABLE_ Vehicle_Stop_Charging 1 "Vehicle_Current_Zero" 0 "None" ;
+VAL_TABLE_ Charging_Complete 1 "Disable Charging" 0 "Enable Charging " ;
+VAL_TABLE_ Charging_Status 1 "Vehicle Charging" 0 "Vehicle Not Charging" ;
+VAL_TABLE_ Contactor_Control 1 "Close Charging Contactor" 0 "Open Charging Contactor" ;
+VAL_TABLE_ Charger_Gun_Detected 1 "GUN Detected" 0 "GUN Not Detected" ;
+VAL_TABLE_ EV_Ready 1 "Ready Fro Charging" 0 "Not Ready" ;
+VAL_TABLE_ Gun_Lock_Feedback 1 "GUN_Locked" 0 "GUN_Unlocked" ;
+VAL_TABLE_ Vehicle_Immobilize 1 "Vehicle Immobilise" 0 "Vehicle Mobilise" ;
+VAL_TABLE_ Gun_Lock_Fault 1 "GUN Lock Fault" 0 "GUN Lock OK" ;
+VAL_TABLE_ Temperature_Fault 1 "Temp Greater than 70 DegC" 0 "Temp Under Permissible Limit" ;
+VAL_TABLE_ EV_Error_Code 11 "ErrorCode_NoData" 10 "ChargingSystemIncompatibility" 9 "Reserved_C" 8 "Reserved_B" 7 "Reserved_A" 6 "FAILED_ChargingVoltageOutOfRange" 5 "FAILED_ChargingCurrentDiff" 4 "FAILED_EVRESSMalfunction" 3 "FAILED_ChargerConnectorLockFault" 2 "FAILED_EVShiftPosition" 1 "FAILED_RESSTemperatureInhibit" 0 "NO_Error" ;
+VAL_TABLE_ Evcc_Status_Code 35 "Session_End" 134 "Type2_unlock_enabled_exit" 133 "Type2_Status_GunLockFault" 132 "Type2_TerminateChargingEvcc" 131 "Type2_Status_duty_fault" 130 "Type2_Status_charging_ongoing" 129 "Type2_Status_vehicle_immobilise" 128 "Type2_Status_gun_detected" 34 "Welding_Detection_Failed" 33 "Welding_Detection_Success" 32 "Welding_Detection_Ongoing" 31 "Charging_Failed" 30 "Charging_Success" 29 "Charging_Ongoing" 28 "Precharge_Failed" 27 "Precharge_Success" 26 "Precharge_Ongoing" 25 "Cable_Check_Isolation_Failed" 24 "Cable_Check_Isolation_Success" 23 "Cable_Check_Isolation_Ongoing" 22 "Charging_Params_Exchange_Failed" 21 "Charging_Params_Exchange_Success" 20 "Charging_Params_Exchange_Ongoing" 19 "Authenticating_Failed" 18 "Authenticating_Success" 17 "Authenticating_Ongoing" 16 "Payment_Selection_Failed" 15 "Paymen_Selection_Success" 14 "Service_Discovery_Failed" 13 "Service_Discovery_Success" 12 "Session_Setup_Failed" 11 "Session_Setup_Success" 10 "Protocol_Handshake_Failed" 9 "Protocol_Handshake_Success" 8 "TCP_link_Failed" 7 "TCP_link_established" 6 "SECC_discovery_Failed" 5 "SECC_discovery_Success" 4 "SECC_discovery_ongoing" 3 "Slac_Failed" 2 "Slac_Success" 1 "Slacc_Ongoing" 0 "Intilizing" ;
+VAL_TABLE_ Selected_App_Protocol 2 "ISO:15118:2:2013" 1 "DIN:70121:2012" 0 "NONE" ;
+VAL_TABLE_ CP_State 4 "CP_STATE E" 3 "CP_STATE D" 2 "CP_STATE C" 1 "CP_STATE B" 0 "CP_STATE A" ;
+VAL_TABLE_ Evse_Error_Code_enumeration 19 "Wrong_Energy_Transfer_Mode" 18 "No_Charge_Service_Selected" 16 "Charging_Profile_Invalid" 14 "Power_Delivery_Not_Applied" 13 "Wrong_Charge_Parameter" 6 "Payment_Selection_Invalid" 5 "Service_ID_Invalid" 2 "Sequence_Error" 0 "No_Error" ;
+VAL_TABLE_ Evcc_Error_Code_enumeration 39 "EVSE Emergency" 38 "EVSE Isolation Status Error" 37 "Wrong Charge Parameter" 36 "Locking Actuator Error" 34 "Temperature Fault" 33 "Response Code Error" 32 "Evse Sequence Error" 31 "CP PP Lost" 30 "HeartBeat Error" 27 "Warning No PWM" 26 "Step Precharge" 25 "Step Cable Check" 24 "Step CPD" 23 "Step Auth" 20 "Step Communcation Setup" 15 "Timeout Session Stop Resp" 14 "Timeout Welding Detection Resp" 13 "Timeout Current Demand Resp" 12 "Timeout Power Delivery Resp" 11 "Timeout Precharge Resp" 10 "Timeout Cable Check Resp" 9 "Timeout CPD Response" 8 "Timeout Auth Response" 7 "Timeout Payment Selection Resp" 6 "Timeout Service Discovery Resp" 5 "Timeout Session Setup Response" 4 "Timeout SAP Response" 3 "Timout SDP Sequence" 2 "Timeout Link Detection" 1 "Timeout Slac Sequence" 0 "NONE" ;
+VAL_TABLE_ Termination_Detail_enumeration 9 "EV_Ready Flag Reception Failure" 8 "Extrenal Actuator Unlock" 7 "Actuator Locking Fault" 36 "Emergency PLC Chip Status" 35 "Emergency Pilot Status" 34 "Emergency Proximity Status" 33 "Emergency High Temperature" 32 "Emergency HeartBeat Error" 31 "Emergency From Evse" 6 "Vehicle Hv Failure" 5 "Evse Invalid Isolation Status" 4 "Evse Wrong Charge Parameter" 3 "Evse Wrong Response Code" 0 "NONE" ;
+
+
+BO_ 2147484513 EVCC_TX_4: 8 EVCC
+ SG_ CHARGER_PRESENT_CURRENT : 55|16@0+ (0.1,0) [0|6553.5] "Amps" Vector__XXX
+ SG_ CHARGER_PRESENT_VOLTAGE : 39|16@0+ (0.1,0) [0|6553.5] "Volts" Vector__XXX
+ SG_ CHARGER_MAX_POWER : 23|16@0+ (10,0) [0|655350] "Watt" Vector__XXX
+ SG_ CHARGER_MIN_VOLTAGE : 7|16@0+ (0.1,0) [0|6553.5] "Volts" Vector__XXX
+
+BO_ 2147484512 EVCC_TX_3: 8 EVCC
+ SG_ SOFTWARE_VERSION : 7|8@0+ (0.1,0) [0|25.5] "Num" Vector__XXX
+ SG_ CHARGER_MAX_VOLTAGE : 47|16@0+ (0.1,0) [0|6553.5] "Volts" Vector__XXX
+ SG_ CHARGER_MIN_CURRENT : 31|16@0+ (0.1,0) [0|6553.5] "Amps" Vector__XXX
+ SG_ CHARGER_MAX_CURRENT : 15|16@0+ (0.1,0) [0|6553.5] "Amps" Vector__XXX
+
+BO_ 2148453378 EVCC_TX_5: 8 EVCC
+ SG_ SELECTED_APP_PROTOCOL : 55|8@0+ (1,0) [0|3] "" Vector__XXX
+ SG_ CP_STATE : 39|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ EVSE_ERROR_CODE : 31|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ EVCC_ERROR_CODES : 23|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ TERMINATION_DETAIL : 15|8@0+ (1,0) [0|255] "" Vector__XXX
+
+BO_ 2147484480 EVCC_RX_2: 8 Vector__XXX
+ SG_ HV_READY : 3|1@0+ (1,0) [0|1] ""  EVCC
+ SG_ FORCE_ACTUATOR_UNLOCK : 4|1@0+ (1,0) [0|1] ""  EVCC
+ SG_ NOMINAL_BATT_CAPACITY : 47|16@0+ (1,0) [0|1000] "Ah"  EVCC
+ SG_ REMAINING_BATT_CAPACITY : 39|8@0+ (1,0) [0|255] "KWh"  EVCC
+ SG_ EV_ERROR_CODE : 15|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ VEH_STOP_CHARGING_FLAG : 2|1@0+ (1,0) [0|1] ""  EVCC
+ SG_ CHARGING_COMPLETE_FLAG : 1|1@0+ (1,0) [0|1] ""  EVCC
+ SG_ EV_READY_FLAG : 0|1@0+ (1,0) [0|1] ""  EVCC
+
+BO_ 2147484432 EVCC_RX_1: 8 Vector__XXX
+ SG_ EVSE_Protocol_Priority_Selection : 63|8@0+ (1,0) [0|1] ""  EVCC
+ SG_ BATT_PACK_PRESENT_VOLTAGE : 47|16@0+ (0.25,0) [0|1000] "Volt"  EVCC
+ SG_ EV_CONTINEOUS_CHRG_CURR_LIMIT : 39|8@0+ (1,0) [0|255] "Amps"  EVCC
+ SG_ SOC : 31|8@0+ (0.5,0) [0|100] "%"  EVCC
+ SG_ EV_MAX_CHRG_CURR_LIMIT : 15|16@0+ (0.25,0) [0|1000] "Amps"  EVCC
+
+BO_ 2148453377 EVCC_TX_2: 8 EVCC
+ SG_ VEHICLE_IMMOBILIZE : 44|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ EVCC_GUN_UNLOCK_REQUEST_STATUS : 47|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ EVCC_GUN_LOCK_REQUEST_STATUS : 46|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ GUN_LOCK_FEEDBACK : 45|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ GUN_LOCK_FAULT : 43|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ TEMP_2_FAULT : 42|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ TEMP_1_FAULT : 41|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ OBC_DERATING_FACTOR : 39|8@0+ (1,0) [0|100] "%" Vector__XXX
+ SG_ TEMPERATURE_2_VALUE : 23|16@0- (0.1,0) [-50|200] "DegC" Vector__XXX
+ SG_ TEMPERATURE_1_VALUE : 7|16@0- (0.1,0) [-50|200] "DegC" Vector__XXX
+
+BO_ 2147484496 EVCC_TX_1: 8 EVCC
+ SG_ EV_Error_Code : 55|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ SELECTED_ATTENUATION_IN_DB : 47|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ CP_DUTY_CYCLE : 31|8@0+ (1,0) [0|100] "%" Vector__XXX
+ SG_ PP_GUN_RESISTANCE : 15|16@0+ (1,0) [0|65535] "Ohm" Vector__XXX
+ SG_ DIFFERENTIAL_CURRENT_MEAS : 63|8@0+ (1,0) [0|255] "" Vector__XXX
+ SG_ NEGATIVE_CONTACTOR_CONTROL : 36|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ CHARGING_STATUS : 35|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ POSITIVE_CONTACTOR_CONTROL : 34|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ GUN_DETECTED : 33|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ EVCC_READY : 32|1@0+ (1,0) [0|1] "" Vector__XXX
+ SG_ EVCC_STATUS_CODE : 7|8@0+ (1,0) [0|255] "" Vector__XXX
+
+
+
+CM_ SG_ 2148453377 VEHICLE_IMMOBILIZE "0 : Vehicle Mobilize
+1 : Vehicle Immobilize
+";
+CM_ SG_ 2148453377 GUN_LOCK_FAULT "0 : Gun Lock OK
+1 : Gun Lock Fault Detected
+";
+CM_ SG_ 2148453377 TEMP_2_FAULT "0 : Temperature is under set limit
+1 : Temperature Greater Than set limit";
+CM_ SG_ 2148453377 TEMP_1_FAULT "0 : Temperature is under set limit
+1 : Temperature Greater Than set limit
+";
+CM_ SG_ 2147484496 DIFFERENTIAL_CURRENT_MEAS "Deviation of Set current with Actual current
+";
+CM_ SG_ 2147484496 NEGATIVE_CONTACTOR_CONTROL "0 : Open charging contactor
+1 : Close charging contactor
+";
+CM_ SG_ 2147484496 CHARGING_STATUS "0 : Vehicle not charging
+1 : Vehicle charging
+";
+CM_ SG_ 2147484496 POSITIVE_CONTACTOR_CONTROL "0 : Open charging contactor
+1 : Close charging contactor
+";
+BA_DEF_  "BusType" STRING ;
+BA_DEF_DEF_  "BusType" "CAN";
+BA_ "BusType" "CAN";
+VAL_ 2148453378 SELECTED_APP_PROTOCOL 2 "ISO:15118:2:2013" 1 "DIN:70121:2012" 0 "NONE" ;
+VAL_ 2148453378 CP_STATE 4 "CP_STATE E" 3 "CP_STATE D" 2 "CP_STATE C" 1 "CP_STATE B" 0 "CP_STATE A" ;
+VAL_ 2148453378 EVSE_ERROR_CODE 19 "Wrong_Energy_Transfer_Mode" 18 "No_Charge_Service_Selected" 16 "Charging_Profile_Invalid" 14 "Power_Delivery_Not_Applied" 13 "Wrong_Charge_Parameter" 6 "Payment_Selection_Invalid" 5 "Service_ID_Invalid" 2 "Sequence_Error" 0 "No_Error" ;
+VAL_ 2148453378 EVCC_ERROR_CODES 39 "EVSE Emergency" 38 "EVSE Isolation Status Error" 37 "Wrong Charge Parameter" 36 "Locking Actuator Error" 34 "Temperature Fault" 33 "Response Code Error" 32 "Evse Sequence Error" 31 "CP PP Lost" 30 "HeartBeat Error" 27 "Warning No PWM" 26 "Step Precharge" 25 "Step Cable Check" 24 "Step CPD" 23 "Step Auth" 20 "Step Communcation Setup" 15 "Timeout Session Stop Resp" 14 "Timeout Welding Detection Resp" 13 "Timeout Current Demand Resp" 12 "Timeout Power Delivery Resp" 11 "Timeout Precharge Resp" 10 "Timeout Cable Check Resp" 9 "Timeout CPD Response" 8 "Timeout Auth Response" 7 "Timeout Payment Selection Resp" 6 "Timeout Service Discovery Resp" 5 "Timeout Session Setup Response" 4 "Timeout SAP Response" 3 "Timout SDP Sequence" 2 "Timeout Link Detection" 1 "Timeout Slac Sequence" 0 "NONE" ;
+VAL_ 2148453378 TERMINATION_DETAIL 9 "EV_Ready Flag Reception Failure" 8 "Extrenal Actuator Unlock" 7 "Actuator Locking Fault" 36 "Emergency PLC Chip Status" 35 "Emergency Pilot Status" 34 "Emergency Proximity Status" 33 "Emergency High Temperature" 32 "Emergency HeartBeat Error" 31 "Emergency From Evse" 6 "Vehicle Hv Failure" 5 "Evse Invalid Isolation Status" 4 "Evse Wrong Charge Parameter" 3 "Evse Wrong Response Code" 0 "NONE" ;
+VAL_ 2147484480 HV_READY 1 "Vehicle HV Isolation OK" 0 "Vehicle HV Isolation Failure" ;
+VAL_ 2147484480 FORCE_ACTUATOR_UNLOCK 1 "Actuator Unlock ENABLE" 0 "Actuator Unlock DISABLE" ;
+VAL_ 2147484480 EV_ERROR_CODE 11 "ErrorCode_NoData" 10 "ChargingSystemIncompatibility" 9 "Reserved_C" 8 "Reserved_B" 7 "Reserved_A" 6 "FAILED_ChargingVoltageOutOfRange" 5 "FAILED_ChargingCurrentDiff" 4 "FAILED_EVRESSMalfunction" 3 "FAILED_ChargerConnectorLockFault" 2 "FAILED_EVShiftPosition" 1 "FAILED_RESSTemperatureInhibit" 0 "NO_Error" ;
+VAL_ 2147484480 VEH_STOP_CHARGING_FLAG 1 "Vehicle_Current_Zero" 0 "None" ;
+VAL_ 2147484480 CHARGING_COMPLETE_FLAG 1 "Disable Charging" 0 "Enable Charging " ;
+VAL_ 2147484480 EV_READY_FLAG 1 "Ready Fro Charging" 0 "Not Ready" ;
+VAL_ 2147484432 EVSE_Protocol_Priority_Selection 1 "ISO 15118-2:2013" 0 "DIN SPEC 70121:2014" ;
+VAL_ 2148453377 VEHICLE_IMMOBILIZE 1 "Vehicle Immobilise" 0 "Vehicle Mobilise" ;
+VAL_ 2148453377 EVCC_GUN_UNLOCK_REQUEST_STATUS 1 "GUN Unlock Req Pending" 0 "GUN Unlock Req Processed" ;
+VAL_ 2148453377 EVCC_GUN_LOCK_REQUEST_STATUS 1 "GUN Lock Req Pending" 0 "GUN Lock Req Processed" ;
+VAL_ 2148453377 GUN_LOCK_FEEDBACK 1 "GUN_Locked" 0 "GUN_Unlocked" ;
+VAL_ 2148453377 GUN_LOCK_FAULT 1 "GUN Lock Fault" 0 "GUN Lock OK" ;
+VAL_ 2148453377 TEMP_2_FAULT 1 "Temp Greater than 70 DegC" 0 "Temp Under Permissible Limit" ;
+VAL_ 2148453377 TEMP_1_FAULT 1 "Temp Greater than 70 DegC" 0 "Temp Under Permissible Limit" ;
+VAL_ 2147484496 EV_Error_Code 11 "ErrorCode_NoData" 10 "ChargingSystemIncompatibility" 9 "Reserved_C" 8 "Reserved_B" 7 "Reserved_A" 6 "FAILED_ChargingVoltageOutOfRange" 5 "FAILED_ChargingCurrentDiff" 4 "FAILED_EVRESSMalfunction" 3 "FAILED_ChargerConnectorLockFault" 2 "FAILED_EVShiftPosition" 1 "FAILED_RESSTemperatureInhibit" 0 "NO_Error" ;
+VAL_ 2147484496 NEGATIVE_CONTACTOR_CONTROL 1 "Close Charging Contactor" 0 "Open Charging Contactor" ;
+VAL_ 2147484496 CHARGING_STATUS 1 "Vehicle Charging" 0 "Vehicle Not Charging" ;
+VAL_ 2147484496 POSITIVE_CONTACTOR_CONTROL 1 "Close Charging Contactor" 0 "Open Charging Contactor" ;
+VAL_ 2147484496 GUN_DETECTED 1 "GUN Detected" 0 "GUN Not Detected" ;
+VAL_ 2147484496 EVCC_READY 1 "Ready Fro Charging" 0 "Not Ready" ;
+VAL_ 2147484496 EVCC_STATUS_CODE 35 "Session_End" 134 "Type2_unlock_enabled_exit" 133 "Type2_Status_GunLockFault" 132 "Type2_TerminateChargingEvcc" 131 "Type2_Status_duty_fault" 130 "Type2_Status_charging_ongoing" 129 "Type2_Status_vehicle_immobilise" 128 "Type2_Status_gun_detected" 34 "Welding_Detection_Failed" 33 "Welding_Detection_Success" 32 "Welding_Detection_Ongoing" 31 "Charging_Failed" 30 "Charging_Success" 29 "Charging_Ongoing" 28 "Precharge_Failed" 27 "Precharge_Success" 26 "Precharge_Ongoing" 25 "Cable_Check_Isolation_Failed" 24 "Cable_Check_Isolation_Success" 23 "Cable_Check_Isolation_Ongoing" 22 "Charging_Params_Exchange_Failed" 21 "Charging_Params_Exchange_Success" 20 "Charging_Params_Exchange_Ongoing" 19 "Authenticating_Failed" 18 "Authenticating_Success" 17 "Authenticating_Ongoing" 16 "Payment_Selection_Failed" 15 "Payment_Selection_Success" 14 "Service_Discovery_Failed" 13 "Service_Discovery_Success" 12 "Session_Setup_Failed" 11 "Session_Setup_Success" 10 "Protocol_Handshake_Failed" 9 "Protocol_Handshake_Success" 8 "TCP_link_Failed" 7 "TCP_link_established" 6 "SECC_discovery_Failed" 5 "SECC_discovery_Success" 4 "SECC_discovery_ongoing" 3 "Slac_Failed" 2 "Slac_Success" 1 "Slacc_Ongoing" 0 "Intilizing" ;
+

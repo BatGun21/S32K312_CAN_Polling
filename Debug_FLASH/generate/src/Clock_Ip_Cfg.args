@@ -9,6 +9,11 @@
 -DCPU_S32K312
 -DCPU_CORTEX_M7
 -I../RTD/include
+-I"C:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/src/usr"
+-I"C:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/src/lib"
+-I"C:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/src/inc"
+-I"C:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/src/conf"
+-I"C:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/src/butl"
 -IC:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/generate/include
 -IC:/Users/VML021/workspaceS32DS.3.5/S32K312_CAN__Polling/RTD/include
 -I"C:/NXP/S32DS.3.5/S32DS/software/PlatformSDK_S32K3/RTD/BaseNXP_TS_T40D34M30I0R0/header"
