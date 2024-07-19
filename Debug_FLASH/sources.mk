@@ -24,5 +24,8 @@ Project_Settings/Startup_Code \
 RTD/src \
 board \
 generate/src \
+src/butl \
+src/lib \
 src \
+src/usr \
 
