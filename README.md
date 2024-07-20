@@ -1,69 +1,60 @@
-# S32K312 CAN Polling Project
+# VCU EVCC Integration Project
 
-This project demonstrates CAN communication, UART integration, and periodic interrupt handling on the NXP S32K312 microcontroller. It includes sending and receiving CAN messages, logging via UART, and using LEDs to indicate various statuses.
+This project integrates an Electric Vehicle Communication Controller (EVCC) with a Vehicle Control Unit (VCU) using NXP's S32K312 microcontroller. It includes CAN communication, data packing/unpacking, and EVCC functionality.
 
 ## Features
 
 - **CAN Communication**
-  - **Transmission**: The system sends predefined CAN messages with specific IDs and data payloads.
-  - **Reception**: The system receives CAN messages, processes them, and logs the information via UART.
-- **UART Logging**
-  - Logs CAN messages and system status updates in real-time.
-  - Uses LEDs to indicate different UART status conditions such as errors or busy states.
-- **Periodic Interrupts**
-  - Utilizes the PIT (Periodic Interrupt Timer) module to create regular interrupts for executing periodic tasks.
-- **LED Indicators**
-  - LEDs connected to GPIO pins indicate system states and UART communication status.
+  - **Transmission**: Sends CAN messages based on the EVCC requirements.
+  - **Reception**: Receives and processes CAN messages from the EVCC.
+- **Data Packing/Unpacking**
+  - Utilizes predefined structures for packing data into CAN messages and unpacking received data.
+- **EVCC Functionality**
+  - Ensures seamless communication between the EVCC and VCU, facilitating electric vehicle operations.
 
 ## Functional Overview
 
 ### CAN Communication
 
 - **Sending CAN Messages**
-  - The code contains a list of CAN test cases, each with a unique CAN ID and data payload.
-  - These messages are sent through the CAN module and are used for testing and demonstration purposes.
-
+  - The system sends CAN messages with specific IDs and data payloads necessary for EVCC operation.
 - **Receiving CAN Messages**
-  - The system is configured to receive CAN messages.
-  - Upon reception, the CAN data is formatted into a string and logged via UART for easy monitoring.
+  - CAN messages are received from the EVCC, processed, and appropriate actions are taken based on the data.
 
-### UART Logging
+### Data Packing/Unpacking
 
-- **Logging Mechanism**
-  - UART is used to output received CAN messages and other important information.
-  - If any UART errors occur, the system uses LEDs to indicate the specific error condition.
+- **Packing Data**
+  - Data to be sent via CAN is packed into a specific format using predefined structures.
+- **Unpacking Data**
+  - Received CAN data is unpacked into readable formats for processing and logging.
 
-### Periodic Interrupts
+### EVCC Functionality
 
-- **PIT Configuration**
-  - The PIT module is set up to generate interrupts at regular intervals.
-  - These interrupts are used to perform periodic tasks, such as toggling LEDs and checking the system status.
-
-### LED Indicators
-
-- **Status Indication**
-  - Different LEDs are used to indicate the status of UART communication and other system states.
-  - For example, LEDs may turn on or off based on error conditions or the state of CAN communication.
+- **Integration with VCU**
+  - Facilitates communication between the EVCC and VCU, ensuring proper vehicle control.
+- **Handling EVCC Commands**
+  - Executes commands received from the EVCC, enabling various electric vehicle functionalities.
 
 ## How It Works
 
-1. **Initialization**: The system initializes the clock, CAN, UART, and GPIO for LEDs.
-2. **Sending Messages**: Predefined CAN messages are sent in a loop. Each message is logged via UART.
-3. **Receiving Messages**: CAN messages are received and logged in a formatted string over UART.
-4. **Handling Interrupts**: Periodic interrupts are generated to handle tasks such as checking the state of the system and updating LEDs.
-5. **Error Handling**: Any UART errors are indicated through LEDs to alert the user to communication issues.
+1. **Initialization**: Initializes the S32K312 microcontroller, CAN module, and data structures.
+2. **Data Packing**: Packs data into CAN messages based on the EVCC communication protocol.
+3. **Sending Messages**: Transmits packed CAN messages to the EVCC.
+4. **Receiving Messages**: Receives CAN messages from the EVCC and unpacks the data.
+5. **Processing Data**: Processes the unpacked data and performs necessary actions.
 
 ## Dependencies
 
 - NXP S32K312 microcontroller
-- Necessary peripheral drivers and configurations for CAN, UART, PIT, and GPIO.
+- EVCC and VCU hardware
+- Peripheral drivers for CAN communication
 
 ## Getting Started
 
-1. **Setup**: Connect the NXP S32K312 microcontroller to your development environment.
-2. **Compile and Upload**: Compile the code using your preferred IDE and upload it to the microcontroller.
-3. **Run the System**: Power on the system to start CAN communication, UART logging, and LED status indication.
+1. **Setup**: Connect the S32K312 microcontroller to the EVCC and VCU.
+2. **Compile and Upload**: Compile the code and upload it to the S32K312 microcontroller.
+3. **Run the System**: Power on the system to start CAN communication between the EVCC and VCU.
 
 ---
 
-This project is a practical demonstration of CAN communication and UART logging using the S32K312 microcontroller, providing a foundational example for automotive and embedded applications.
+This project demonstrates the integration of an EVCC with a VCU using the S32K312 microcontroller, showcasing essential functionalities for electric vehicle control systems.
