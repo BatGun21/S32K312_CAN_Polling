@@ -58,6 +58,8 @@ EVCC_TX_2_t EVCC_TX_2_Msg;
 EVCC_TX_3_t EVCC_TX_3_Msg;
 EVCC_TX_4_t EVCC_TX_4_Msg;
 EVCC_TX_5_t EVCC_TX_5_Msg;
+EVCC_RX_1_t EVCC_RX_1_Msg;
+EVCC_RX_2_t EVCC_RX_2_Msg;
 volatile uint8 toggleLed = 0U;
 uint8 U8_counter = 0U;
 volatile int exit_code = 0;
@@ -70,16 +72,7 @@ uint8_t rxBuffer[BUFFER_SIZE];
 Flexcan_Ip_MsgBuffType rxData;
 char uartString[BUFFER_SIZE]; // String to hold the formatted CAN data
 
-typedef struct {
-    uint32 msgId;
-    uint8 data[8];
-    uint8 dataLen;
-    const char *description;
-} CAN_Msg;
-
-CAN_Msg SendMsgInstances = {0x310, {0x01, 0x00, 0x00, 0x32, 0x00, 0xFF, 0x00, 0x10}, 8, "Test Case 1"};
-
-
+/* Function Prototypes */
 extern ISR(PIT_0_ISR);
 void PIT_Init(void);
 void PitNotification(void);
@@ -88,10 +81,13 @@ void LED_Init(void);
 void LPUART_Init(void);
 void UART_Error_Handler(Lpuart_Uart_Ip_StatusType Status);
 void CAN_Init(void);
-void sendCANMessage(CAN_Msg *SendMsg);
+void sendCANMessage(void);
 void processCANMessage(Flexcan_Ip_StatusType canStatus, Flexcan_Ip_MsgBuffType *rxData, const char *msgIdStr);
 void receiveCANMessage(void);
+void setEVCC_RX_1_Values(void);
+void setEVCC_RX_2_Values(void);
 
+/* Function Definations */
 void PitNotification(void)
 {
     U8_counter++;
@@ -183,7 +179,6 @@ void CAN_Init(void)
     FlexCAN_Ip_ExitFreezeMode(INST_FLEXCAN_0);
 }
 
-
 void processCANMessage(Flexcan_Ip_StatusType canStatus, Flexcan_Ip_MsgBuffType *rxData, const char *msgIdStr)
 {
     if (canStatus == FLEXCAN_STATUS_SUCCESS)
@@ -260,10 +255,6 @@ void processCANMessage(Flexcan_Ip_StatusType canStatus, Flexcan_Ip_MsgBuffType *
     }
 }
 
-
-
-
-
 void receiveCANMessage(void)
 {
     Flexcan_Ip_StatusType canStatus1 = FlexCAN_Ip_ReceiveBlocking(INST_FLEXCAN_0, RX_MB_IDX_1, &rxData1, TRUE, 100000);
@@ -279,22 +270,71 @@ void receiveCANMessage(void)
     processCANMessage(canStatus5, &rxData5, "0xECC02");
 }
 
-
-void sendCANMessage(CAN_Msg *SendMsg)
+void setEVCC_RX_1_Values(void)
 {
+    EVCC_RX_1_Msg.EV_MAX_CHRG_CURR_LIMIT_ro = ECUDB_EV_MAX_CHRG_CURR_LIMIT_ro_toS(100.0); // 100 Amps
+    EVCC_RX_1_Msg.SOC_ro = ECUDB_SOC_ro_toS(80.0); // 80%
+    EVCC_RX_1_Msg.EV_CONTINEOUS_CHRG_CURR_LIMIT = 50; // 50 Amps
+    EVCC_RX_1_Msg.BATT_PACK_PRESENT_VOLTAGE_ro = ECUDB_BATT_PACK_PRESENT_VOLTAGE_ro_toS(292.0); // 292 Volts
+    EVCC_RX_1_Msg.EVSE_Protocol_Priority_Selection = EVSE_Protocol_Priority_Selection_EVCC_RX_1_ISO_1511822013; // ISO 15118-2:2013
+}
+
+void setEVCC_RX_2_Values(void)
+{
+    EVCC_RX_2_Msg.EV_READY_FLAG = EV_READY_FLAG_EVCC_RX_2_Ready_Fro_Charging;
+    EVCC_RX_2_Msg.CHARGING_COMPLETE_FLAG = CHARGING_COMPLETE_FLAG_EVCC_RX_2_Enable_Charging_;
+    EVCC_RX_2_Msg.VEH_STOP_CHARGING_FLAG = VEH_STOP_CHARGING_FLAG_EVCC_RX_2_None;
+    EVCC_RX_2_Msg.HV_READY = HV_READY_EVCC_RX_2_Vehicle_HV_Isolation_OK;
+    EVCC_RX_2_Msg.FORCE_ACTUATOR_UNLOCK = FORCE_ACTUATOR_UNLOCK_EVCC_RX_2_Actuator_Unlock_DISABLE;
+    EVCC_RX_2_Msg.EV_ERROR_CODE = EV_ERROR_CODE_EVCC_RX_2_NO_Error;
+    EVCC_RX_2_Msg.REMAINING_BATT_CAPACITY = 20; // 20 kWh
+    EVCC_RX_2_Msg.NOMINAL_BATT_CAPACITY = 85; // 85 Ah
+}
+
+void sendCANMessage(void)
+{
+    // Set the values for EVCC_RX_1 and EVCC_RX_2
+    setEVCC_RX_1_Values();
+    setEVCC_RX_2_Values();
+
+    // Pack the EVCC_RX_1 message
+    uint8_t evcc_rx_1_data[EVCC_RX_1_DLC];
+    uint8_t evcc_rx_1_len;
+    uint8_t evcc_rx_1_ide;
+    uint32_t evcc_rx_1_id = Pack_EVCC_RX_1_ecudb(&EVCC_RX_1_Msg, evcc_rx_1_data, &evcc_rx_1_len, &evcc_rx_1_ide);
+
+    // Pack the EVCC_RX_2 message
+    uint8_t evcc_rx_2_data[EVCC_RX_2_DLC];
+    uint8_t evcc_rx_2_len;
+    uint8_t evcc_rx_2_ide;
+    uint32_t evcc_rx_2_id = Pack_EVCC_RX_2_ecudb(&EVCC_RX_2_Msg, evcc_rx_2_data, &evcc_rx_2_len, &evcc_rx_2_ide);
+
+    // Define FlexCAN data info structure for sending
     Flexcan_Ip_DataInfoType tx_info = {
-        .msg_id_type = FLEXCAN_MSG_ID_STD,
-        .data_length = SendMsg->dataLen,
+        .msg_id_type = FLEXCAN_MSG_ID_EXT,
+        .data_length = EVCC_RX_1_DLC,
         .is_polling = TRUE,
         .is_remote = FALSE
     };
 
-    FlexCAN_Ip_Send(INST_FLEXCAN_0, TX_MB_IDX, &tx_info, SendMsg->msgId, SendMsg->data);
+    // Send EVCC_RX_1 message
+    FlexCAN_Ip_Send(INST_FLEXCAN_0, TX_MB_IDX, &tx_info, evcc_rx_1_id, evcc_rx_1_data);
+    while (FlexCAN_Ip_GetTransferStatus(INST_FLEXCAN_0, TX_MB_IDX) != FLEXCAN_STATUS_SUCCESS)
+    {
+        FlexCAN_Ip_MainFunctionWrite(INST_FLEXCAN_0, TX_MB_IDX);
+    }
+
+    // Update the data length for EVCC_RX_2 message
+    tx_info.data_length = EVCC_RX_2_DLC;
+
+    // Send EVCC_RX_2 message
+    FlexCAN_Ip_Send(INST_FLEXCAN_0, TX_MB_IDX, &tx_info, evcc_rx_2_id, evcc_rx_2_data);
     while (FlexCAN_Ip_GetTransferStatus(INST_FLEXCAN_0, TX_MB_IDX) != FLEXCAN_STATUS_SUCCESS)
     {
         FlexCAN_Ip_MainFunctionWrite(INST_FLEXCAN_0, TX_MB_IDX);
     }
 }
+
 void PIT_Init(void)
 {
     /* Initialize PIT instance 0 - Channel 0 */
@@ -336,7 +376,6 @@ int main(void)
     {
     	receiveCANMessage();
     }    
-
 
     return 0;
 }
