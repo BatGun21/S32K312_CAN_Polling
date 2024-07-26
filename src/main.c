@@ -11,6 +11,9 @@
 #include "OsIf.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
 #include "ecudb.h"
 #include "ecudb-fmon.h"
@@ -34,17 +37,28 @@
 
 Flexcan_Ip_MsgBuffType rxData1, rxData2, rxData3, rxData4, rxData5;
 
-
 #define TX_MB_IDX 0U
 #define LPUART_UART_INSTANCE    0
 #define BUFFER_SIZE            1000
 
-/*Defines for user pin and port configurations */
 #define RED_LED_PIN                 13u
 #define GREEN_LED_PIN               14u
 #define LED_PORT                PTA_H_HALF
 
 #define FXOSC_CLOCK_FREQ   16000000U
+
+#define LUT_SIZE 600
+
+typedef struct {
+    uint32_t timestamp;  // in 100 ms units
+    uint16_t maxCurrentLimit;  // in Amps
+    uint8_t soc;  // in %
+    uint8_t evContinuousChargingCurrent;  // in Amps
+    uint16_t batteryPackPresentVoltage;  // in Volts
+    uint8_t remainingBattCapacity;  // in kWh
+    uint16_t nominalBattCapacity;  // in Ah
+} ChargingDataPoint;
+
 
 /* PIT instance used - 0 */
 #define PIT_INST_0 0U
@@ -53,6 +67,7 @@ Flexcan_Ip_MsgBuffType rxData1, rxData2, rxData3, rxData4, rxData5;
 
 /* Global flag updated in interrupt */
 // Define the CAN message buffer for EVCC_TX_1
+ChargingDataPoint chargingLUT[LUT_SIZE];
 EVCC_TX_1_t EVCC_TX_1_Msg;
 EVCC_TX_2_t EVCC_TX_2_Msg;
 EVCC_TX_3_t EVCC_TX_3_Msg;
@@ -60,9 +75,10 @@ EVCC_TX_4_t EVCC_TX_4_Msg;
 EVCC_TX_5_t EVCC_TX_5_Msg;
 EVCC_RX_1_t EVCC_RX_1_Msg;
 EVCC_RX_2_t EVCC_RX_2_Msg;
-volatile uint8 toggleLed = 0U;
+volatile uint8 sendCanMsgFlag = 0U;
 uint8 U8_counter = 0U;
 volatile int exit_code = 0;
+uint16_t currentLUTIndex;
 
 /* Global Buffers */
 Flexcan_Ip_DataInfoType rx_info; // For CAN RX configuration
@@ -71,6 +87,7 @@ uint8_t txBuffer[BUFFER_SIZE];
 uint8_t rxBuffer[BUFFER_SIZE];
 Flexcan_Ip_MsgBuffType rxData;
 char uartString[BUFFER_SIZE]; // String to hold the formatted CAN data
+ChargingDataPoint chargingLUT[LUT_SIZE];
 
 /* Function Prototypes */
 extern ISR(PIT_0_ISR);
@@ -86,21 +103,74 @@ void processCANMessage(Flexcan_Ip_StatusType canStatus, Flexcan_Ip_MsgBuffType *
 void receiveCANMessage(void);
 void setEVCC_RX_1_Values(void);
 void setEVCC_RX_2_Values(void);
+void generateLUT(void);
+bool checkAndSetHVFlag(void);
+bool checkAndSetVehicleStopChargingFlag(void);
+bool checkAndSetForceActuatorFlag(void);
+bool checkAndSetChargingCompleteFlag(void);
+bool checkActuator(void);
+uint8_t check_SOC(void);
+
+
+int main(void)
+{
+    /* Initialize the Osif driver */
+    OsIf_Init(NULL_PTR);
+
+    Clock_Init();
+
+    /* Init Pins */
+    Siul2_Port_Ip_Init(NUM_OF_CONFIGURED_PINS0, g_pin_mux_InitConfigArr0);
+
+    Siul2_Dio_Ip_WritePin(CAN0_STB_PORT, CAN0_STB_PIN, 0U);   // CAN0_STB  : PTC-20
+
+    /* Initialize interrupts */
+    IntCtrl_Ip_Init(&IntCtrlConfig_0);
+
+    PIT_Init();
+    CAN_Init();
+    LPUART_Init();
+    LED_Init();
+    generateLUT();
+
+    Siul2_Dio_Ip_WritePin(CAN0_STB_PORT, CAN0_STB_PIN, 1U);   //CAN0_STB
+
+    while (1)
+    {
+    	receiveCANMessage();
+    	if(sendCanMsgFlag)
+    	{
+    		sendCANMessage();
+    		Siul2_Dio_Ip_WritePin(LED_PORT, LED_GREEN_PIN, 0); // Turn off GREEN LED
+    		sendCanMsgFlag = 0;
+    	}
+    }
+
+    return 0;
+}
 
 /* Function Definations */
+void PIT_Init(void)
+{
+    /* Initialize PIT instance 0 - Channel 0 */
+    IntCtrl_Ip_EnableIrq(PIT0_IRQn);
+    Pit_Ip_Init(PIT_INST_0, &PIT_0_InitConfig_PB);
+    Pit_Ip_InitChannel(PIT_INST_0, PIT_0_CH_0);
+    Pit_Ip_EnableChannelInterrupt(PIT_INST_0, CH_0);
+    Pit_Ip_StartChannel(PIT_INST_0, CH_0, PIT_PERIOD);
+}
+
 void PitNotification(void)
 {
     U8_counter++;
-    if(U8_counter >= 100 && U8_counter <= 200)
+    if(U8_counter >= 100)
     {
-        toggleLed = 1U;
-        Siul2_Dio_Ip_WritePin(LED_GREEN_PORT, LED_GREEN_PIN, 1);
+    	sendCanMsgFlag = 1U;
+    	Siul2_Dio_Ip_WritePin(LED_PORT, LED_GREEN_PIN, 1); // Turn on GREEN LED
     }
-    else if (U8_counter >= 200)
+    if (U8_counter>=110)
     {
-        toggleLed = 2U;
-        U8_counter = 0;
-        Siul2_Dio_Ip_WritePin(LED_GREEN_PORT, LED_GREEN_PIN, 0);
+    	U8_counter = 0;
     }
 }
 
@@ -177,6 +247,29 @@ void CAN_Init(void)
     FlexCAN_Ip_ConfigRxMb(INST_FLEXCAN_0, RX_MB_IDX_5, &rx_info, MSG_ID_RX_5);
 
     FlexCAN_Ip_ExitFreezeMode(INST_FLEXCAN_0);
+}
+
+void generateLUT(void) {
+    uint32_t timestamp = 0;
+    float soc = 1.0;  // Start from 1% SOC
+    float maxCurrentLimit = 100.0;  // in Amps
+    float batteryPackPresentVoltage = 288.0;  // in Volts
+    float remainingBattCapacity = 1.0;  // in kWh, just an example
+    float nominalBattCapacity = 100.0;  // in Ah
+
+    for (int i = 0; i < LUT_SIZE; i++) {
+        chargingLUT[i].timestamp = timestamp;
+        chargingLUT[i].maxCurrentLimit = (uint16_t)maxCurrentLimit;
+        chargingLUT[i].soc = (uint8_t)soc;
+        chargingLUT[i].evContinuousChargingCurrent = 50;  // assuming a constant value, can be updated
+        chargingLUT[i].batteryPackPresentVoltage = (uint16_t)batteryPackPresentVoltage;
+        chargingLUT[i].remainingBattCapacity = (uint8_t)remainingBattCapacity;
+        chargingLUT[i].nominalBattCapacity = (uint16_t)nominalBattCapacity;
+
+        timestamp += 100;  // Increment time stamp by 100 ms
+        soc += 0.165f;  // Increment SOC to reach 100% in 1 minute (60/600)
+        remainingBattCapacity += 0.165f / 100.0f * 75.0f / 100.0f;  // Example value increment
+    }
 }
 
 void processCANMessage(Flexcan_Ip_StatusType canStatus, Flexcan_Ip_MsgBuffType *rxData, const char *msgIdStr)
@@ -270,112 +363,179 @@ void receiveCANMessage(void)
     processCANMessage(canStatus5, &rxData5, "0xECC02");
 }
 
-void setEVCC_RX_1_Values(void)
-{
-    EVCC_RX_1_Msg.EV_MAX_CHRG_CURR_LIMIT_ro = ECUDB_EV_MAX_CHRG_CURR_LIMIT_ro_toS(100.0); // 100 Amps
-    EVCC_RX_1_Msg.SOC_ro = ECUDB_SOC_ro_toS(80.0); // 80%
-    EVCC_RX_1_Msg.EV_CONTINEOUS_CHRG_CURR_LIMIT = 50; // 50 Amps
-    EVCC_RX_1_Msg.BATT_PACK_PRESENT_VOLTAGE_ro = ECUDB_BATT_PACK_PRESENT_VOLTAGE_ro_toS(292.0); // 292 Volts
-    EVCC_RX_1_Msg.EVSE_Protocol_Priority_Selection = EVSE_Protocol_Priority_Selection_EVCC_RX_1_ISO_1511822013; // ISO 15118-2:2013
-}
-
-void setEVCC_RX_2_Values(void)
-{
-    EVCC_RX_2_Msg.EV_READY_FLAG = EV_READY_FLAG_EVCC_RX_2_Ready_Fro_Charging;
-    EVCC_RX_2_Msg.CHARGING_COMPLETE_FLAG = CHARGING_COMPLETE_FLAG_EVCC_RX_2_Enable_Charging_;
-    EVCC_RX_2_Msg.VEH_STOP_CHARGING_FLAG = VEH_STOP_CHARGING_FLAG_EVCC_RX_2_None;
-    EVCC_RX_2_Msg.HV_READY = HV_READY_EVCC_RX_2_Vehicle_HV_Isolation_OK;
-    EVCC_RX_2_Msg.FORCE_ACTUATOR_UNLOCK = FORCE_ACTUATOR_UNLOCK_EVCC_RX_2_Actuator_Unlock_DISABLE;
-    EVCC_RX_2_Msg.EV_ERROR_CODE = EV_ERROR_CODE_EVCC_RX_2_NO_Error;
-    EVCC_RX_2_Msg.REMAINING_BATT_CAPACITY = 20; // 20 kWh
-    EVCC_RX_2_Msg.NOMINAL_BATT_CAPACITY = 85; // 85 Ah
-}
-
-void sendCANMessage(void)
-{
-    // Set the values for EVCC_RX_1 and EVCC_RX_2
-    setEVCC_RX_1_Values();
-    setEVCC_RX_2_Values();
-
-    // Pack the EVCC_RX_1 message
-    uint8_t evcc_rx_1_data[EVCC_RX_1_DLC];
-    uint8_t evcc_rx_1_len;
-    uint8_t evcc_rx_1_ide;
-    uint32_t evcc_rx_1_id = Pack_EVCC_RX_1_ecudb(&EVCC_RX_1_Msg, evcc_rx_1_data, &evcc_rx_1_len, &evcc_rx_1_ide);
-
-    // Pack the EVCC_RX_2 message
-    uint8_t evcc_rx_2_data[EVCC_RX_2_DLC];
-    uint8_t evcc_rx_2_len;
-    uint8_t evcc_rx_2_ide;
-    uint32_t evcc_rx_2_id = Pack_EVCC_RX_2_ecudb(&EVCC_RX_2_Msg, evcc_rx_2_data, &evcc_rx_2_len, &evcc_rx_2_ide);
-
-    // Define FlexCAN data info structure for sending
-    Flexcan_Ip_DataInfoType tx_info = {
-        .msg_id_type = FLEXCAN_MSG_ID_EXT,
-        .data_length = EVCC_RX_1_DLC,
-        .is_polling = TRUE,
-        .is_remote = FALSE
-    };
-
-    // Send EVCC_RX_1 message
-    FlexCAN_Ip_Send(INST_FLEXCAN_0, TX_MB_IDX, &tx_info, evcc_rx_1_id, evcc_rx_1_data);
-    while (FlexCAN_Ip_GetTransferStatus(INST_FLEXCAN_0, TX_MB_IDX) != FLEXCAN_STATUS_SUCCESS)
+bool checkAndSetHVFlag(void) {
+    bool hvIsolationOk = true;
+    bool IsolationGone = checkIsolation();
+    if (IsolationGone)
     {
-        FlexCAN_Ip_MainFunctionWrite(INST_FLEXCAN_0, TX_MB_IDX);
+    	 EVCC_RX_2_Msg.HV_READY = 0;
+    	 hvIsolationOk = false;
+    }else
+    {
+    	 EVCC_RX_2_Msg.HV_READY = 1;
+    }
+    return hvIsolationOk;
+}
+
+bool checkAndSetVehicleStopChargingFlag(void) {
+    bool vehicleStopCharging = false;  // Example value
+    return vehicleStopCharging;
+}
+
+bool checkAndSetForceActuatorFlag(void) {
+    bool forceActuatorUnlock = false;
+    bool ActuatorUnlockPressed = checkActuator();
+    if (ActuatorUnlockPressed)
+    {
+    	 EVCC_RX_2_Msg.FORCE_ACTUATOR_UNLOCK = 1;
+    	 forceActuatorUnlock = true;
+    }else
+    {
+    	 EVCC_RX_2_Msg.FORCE_ACTUATOR_UNLOCK = 0;
     }
 
-    // Update the data length for EVCC_RX_2 message
-    tx_info.data_length = EVCC_RX_2_DLC;
+    return forceActuatorUnlock;
+}
 
-    // Send EVCC_RX_2 message
-    FlexCAN_Ip_Send(INST_FLEXCAN_0, TX_MB_IDX, &tx_info, evcc_rx_2_id, evcc_rx_2_data);
-    while (FlexCAN_Ip_GetTransferStatus(INST_FLEXCAN_0, TX_MB_IDX) != FLEXCAN_STATUS_SUCCESS)
+bool checkAndSetChargingCompleteFlag(void) {
+	bool chargingComplete = false;
+	uint8_t SOC = check_SOC();
+    if (SOC == 100)
     {
-        FlexCAN_Ip_MainFunctionWrite(INST_FLEXCAN_0, TX_MB_IDX);
+    	EVCC_RX_1_Msg.SOC_ro = 100;
+    	chargingComplete = true;
+    }
+    return chargingComplete;
+}
+
+
+void checkAndSetEVFlag(void) {
+    bool ppResistanceOk = (EVCC_TX_1_Msg.PP_GUN_RESISTANCE >= 900 && EVCC_TX_1_Msg.PP_GUN_RESISTANCE <= 1100);
+    bool cpDutyCycleOk = (EVCC_TX_1_Msg.CP_DUTY_CYCLE > 0 && EVCC_TX_1_Msg.CP_DUTY_CYCLE <= 10); // Typical value is 4%, so within 10%
+    bool gunDetected = (EVCC_TX_1_Msg.GUN_DETECTED == 1);
+    bool gunLockOk = (EVCC_TX_2_Msg.GUN_LOCK_FAULT == 0);
+    bool vehicleImmobilized = (EVCC_TX_2_Msg.VEHICLE_IMMOBILIZE == 1);
+    bool gunLockFeedbackOk = (EVCC_TX_2_Msg.GUN_LOCK_FEEDBACK == 1);
+
+    bool hvFlag = checkAndSetHVFlag();
+    bool vehicleStopChargingFlag = checkAndSetVehicleStopChargingFlag();
+    bool forceActuatorFlag = checkAndSetForceActuatorFlag();
+    bool chargingCompleteFlag = checkAndSetChargingCompleteFlag();
+
+    if (ppResistanceOk && cpDutyCycleOk && gunDetected && gunLockOk && vehicleImmobilized && gunLockFeedbackOk &&
+        hvFlag && !vehicleStopChargingFlag && !forceActuatorFlag && !chargingCompleteFlag) {
+        EVCC_RX_2_Msg.EV_READY_FLAG = 1;  // Set EV Ready flag high
+    } else {
+        // Send appropriate error message over UART
+        if (!ppResistanceOk) {
+            snprintf((char *)uartString, BUFFER_SIZE, "Error: PP Resistance out of range: %d ohms\r\n", EVCC_TX_1_Msg.PP_GUN_RESISTANCE);
+        } else if (!cpDutyCycleOk) {
+            snprintf((char *)uartString, BUFFER_SIZE, "Error: CP Duty Cycle out of range: %d%%\r\n", EVCC_TX_1_Msg.CP_DUTY_CYCLE);
+        } else if (!gunDetected) {
+            snprintf((char *)uartString, BUFFER_SIZE, "Error: Gun not detected\r\n");
+        } else if (!gunLockOk) {
+            snprintf((char *)uartString, BUFFER_SIZE, "Error: Gun lock fault\r\n");
+        } else if (!vehicleImmobilized) {
+            snprintf((char *)uartString, BUFFER_SIZE, "Error: Vehicle not immobilized\r\n");
+        } else if (!gunLockFeedbackOk) {
+            snprintf((char *)uartString, BUFFER_SIZE, "Error: Gun lock feedback not OK\r\n");
+        } else if (!hvFlag) {
+            snprintf((char *)uartString, BUFFER_SIZE, "Error: HV Isolation not OK\r\n");
+        } else if (vehicleStopChargingFlagOk) {
+            snprintf((char *)uartString, BUFFER_SIZE, "Error: Vehicle Stop Charging requested\r\n");
+        } else if (forceActuatorFlag) {
+            snprintf((char *)uartString, BUFFER_SIZE, "Error: Force Actuator Unlock requested\r\n");
+        } else if (chargingCompleteFlag) {
+            snprintf((char *)uartString, BUFFER_SIZE, "Error: Charging complete\r\n");
+        }
+
+        Lpuart_Uart_Ip_StatusType Uart_status = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+        UART_Error_Handler(Uart_status);
+
+        EVCC_RX_2_Msg.EV_READY_FLAG = 0;  // Reset EV Ready flag
     }
 }
 
-void PIT_Init(void)
-{
-    /* Initialize PIT instance 0 - Channel 0 */
-    IntCtrl_Ip_EnableIrq(PIT0_IRQn);
-    Pit_Ip_Init(PIT_INST_0, &PIT_0_InitConfig_PB);
-    Pit_Ip_InitChannel(PIT_INST_0, PIT_0_CH_0);
-    Pit_Ip_EnableChannelInterrupt(PIT_INST_0, CH_0);
-    Pit_Ip_StartChannel(PIT_INST_0, CH_0, PIT_PERIOD);
+
+
+void setEVCC_RX_1_Values(void) {
+    if (currentLUTIndex < LUT_SIZE) {
+    	EVCC_RX_1_Msg.EV_MAX_CHRG_CURR_LIMIT_ro = (uint16_t)((chargingLUT[currentLUTIndex].maxCurrentLimit - 0.0) / 0.25);
+    	EVCC_RX_1_Msg.SOC_ro = (uint8_t)((chargingLUT[currentLUTIndex].soc - 0.0) / 0.5);
+        EVCC_RX_1_Msg.EV_CONTINEOUS_CHRG_CURR_LIMIT = chargingLUT[currentLUTIndex].evContinuousChargingCurrent;
+        EVCC_RX_1_Msg.BATT_PACK_PRESENT_VOLTAGE_ro = (uint16_t)((chargingLUT[currentLUTIndex].batteryPackPresentVoltage - 0.0) / 0.25);
+        EVCC_RX_1_Msg.EVSE_Protocol_Priority_Selection = 1;
+    }
 }
 
-int main(void)
-{
-    /* Initialize the Osif driver */
-    OsIf_Init(NULL_PTR);
+void setEVCC_RX_2_Values(void) {
+    if (currentLUTIndex < LUT_SIZE) {
+        EVCC_RX_2_Msg.REMAINING_BATT_CAPACITY = chargingLUT[currentLUTIndex].remainingBattCapacity;
+        EVCC_RX_2_Msg.NOMINAL_BATT_CAPACITY = chargingLUT[currentLUTIndex].nominalBattCapacity;
+    }
+}
 
-    Clock_Init();
+void sendCANMessage(void) {
+    // Check and set the EV Ready flag
+    checkAndSetEVFlag();
 
-    /* Init Pins */
-    Siul2_Port_Ip_Init(NUM_OF_CONFIGURED_PINS0, g_pin_mux_InitConfigArr0);
+    // Only send CAN messages if EV Ready flag is set
+    if (EVCC_RX_2_Msg.EV_READY_FLAG == 1) {
+        // Set the values for EVCC_RX_1 and EVCC_RX_2
+        setEVCC_RX_1_Values();
+        setEVCC_RX_2_Values();
 
-    Siul2_Dio_Ip_WritePin(CAN0_STB_PORT, CAN0_STB_PIN, 0U);   // CAN0_STB  : PTC-20
+        // Pack the EVCC_RX_1 message
+        uint8_t evcc_rx_1_data[EVCC_RX_1_DLC];
+        uint8_t evcc_rx_1_len;
+        uint8_t evcc_rx_1_ide;
+        uint32_t evcc_rx_1_id = Pack_EVCC_RX_1_ecudb(&EVCC_RX_1_Msg, evcc_rx_1_data, &evcc_rx_1_len, &evcc_rx_1_ide);
 
-    /* Initialize interrupts */
-    IntCtrl_Ip_Init(&IntCtrlConfig_0);
+        // Pack the EVCC_RX_2 message
+        uint8_t evcc_rx_2_data[EVCC_RX_2_DLC];
+        uint8_t evcc_rx_2_len;
+        uint8_t evcc_rx_2_ide;
+        uint32_t evcc_rx_2_id = Pack_EVCC_RX_2_ecudb(&EVCC_RX_2_Msg, evcc_rx_2_data, &evcc_rx_2_len, &evcc_rx_2_ide);
 
-    PIT_Init();
-    CAN_Init();
-    LPUART_Init();
-    LED_Init();
+        // Define FlexCAN data info structure for sending
+        Flexcan_Ip_DataInfoType tx_info = {
+            .msg_id_type = FLEXCAN_MSG_ID_EXT,
+            .data_length = EVCC_RX_1_DLC,
+            .is_polling = TRUE,
+            .is_remote = FALSE
+        };
 
-    Siul2_Dio_Ip_WritePin(CAN0_STB_PORT, CAN0_STB_PIN, 1U);   //CAN0_STB
+        // Send EVCC_RX_1 message
+        FlexCAN_Ip_Send(INST_FLEXCAN_0, TX_MB_IDX, &tx_info, evcc_rx_1_id, evcc_rx_1_data);
+        while (FlexCAN_Ip_GetTransferStatus(INST_FLEXCAN_0, TX_MB_IDX) != FLEXCAN_STATUS_SUCCESS) {
+            FlexCAN_Ip_MainFunctionWrite(INST_FLEXCAN_0, TX_MB_IDX);
+        }
 
-    /* Send welcome message */
-    Lpuart_Uart_Ip_StatusType Uart_status;
-    Uart_status = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (uint8_t *)"Lets read some CAN messages here:", strlen("Lets read some CAN messages here:"), 50000000);
-    UART_Error_Handler(Uart_status);
+        // Update the data length for EVCC_RX_2 message
+        tx_info.data_length = EVCC_RX_2_DLC;
 
-    while (1)
+        // Send EVCC_RX_2 message
+        FlexCAN_Ip_Send(INST_FLEXCAN_0, TX_MB_IDX, &tx_info, evcc_rx_2_id, evcc_rx_2_data);
+        while (FlexCAN_Ip_GetTransferStatus(INST_FLEXCAN_0, TX_MB_IDX) != FLEXCAN_STATUS_SUCCESS) {
+            FlexCAN_Ip_MainFunctionWrite(INST_FLEXCAN_0, TX_MB_IDX);
+        }
+
+        // Increment the LUT index
+        currentLUTIndex++;
+        if (currentLUTIndex >= LUT_SIZE) {
+            currentLUTIndex = 0;  // Reset to loop over the LUT again
+        }
+    }else
     {
-    	receiveCANMessage();
-    }    
-
-    return 0;
+    	snprintf((char *)uartString, BUFFER_SIZE, "Error: EV not ready for Charging");
+    	Lpuart_Uart_Ip_StatusType Uart_status = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+    	UART_Error_Handler(Uart_status);
+    }
 }
+
+
+
+
+
+
+
