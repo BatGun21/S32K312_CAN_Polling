@@ -139,12 +139,12 @@ int main(void)
     while (1)
     {
     	receiveCANMessage();
-//    	if(sendCanMsgFlag)
-//    	{
-//    		sendCANMessage();
-//    		Siul2_Dio_Ip_WritePin(LED_PORT, LED_GREEN_PIN, 0); // Turn off GREEN LED
-//    		sendCanMsgFlag = 0;
-//    	}
+    	if(sendCanMsgFlag)
+    	{
+    		sendCANMessage();
+    		Siul2_Dio_Ip_WritePin(LED_PORT, LED_GREEN_PIN, 0); // Turn off GREEN LED
+    		sendCanMsgFlag = 0;
+    	}
     }
 
     return 0;
@@ -215,7 +215,7 @@ void UART_Error_Handler(Lpuart_Uart_Ip_StatusType Status)
     }
     else if(Status == LPUART_UART_IP_STATUS_BUSY)
     {
-        Siul2_Dio_Ip_WritePin(LED_PORT, LED_GREEN_PIN, 1); // Turn on GREEN LED
+        Siul2_Dio_Ip_WritePin(LED_PORT, LED_BLUE_PIN, 1); // Turn on GREEN LED
     }
     else if (Status == LPUART_UART_IP_STATUS_TIMEOUT)
     {
@@ -280,51 +280,51 @@ void processCANMessage(Flexcan_Ip_StatusType canStatus, Flexcan_Ip_MsgBuffType *
         if (rxData->msgId == MSG_ID_RX_1)
         {
             Unpack_EVCC_TX_1_ecudb(&EVCC_TX_1_Msg, rxData->data, rxData->dataLen);
-            snprintf((char *)uartString, BUFFER_SIZE,
-                     "Received CAN ID %s: 0x%08lX, EVCC_STATUS_CODE: %d, PP_GUN_RESISTANCE: %d, CP_DUTY_CYCLE: %d%%, EVCC_READY: %d, GUN_DETECTED: %d, POSITIVE_CONTACTOR_CONTROL: %d, CHARGING_STATUS: %d, NEGATIVE_CONTACTOR_CONTROL: %d, SELECTED_ATTENUATION_IN_DB: %d, EV_Error_Code: %d, DIFFERENTIAL_CURRENT_MEAS: %d\r\n",
-                     msgIdStr, rxData->msgId,
-                     EVCC_TX_1_Msg.EVCC_STATUS_CODE, EVCC_TX_1_Msg.PP_GUN_RESISTANCE, EVCC_TX_1_Msg.CP_DUTY_CYCLE,
-                     EVCC_TX_1_Msg.EVCC_READY, EVCC_TX_1_Msg.GUN_DETECTED, EVCC_TX_1_Msg.POSITIVE_CONTACTOR_CONTROL,
-                     EVCC_TX_1_Msg.CHARGING_STATUS, EVCC_TX_1_Msg.NEGATIVE_CONTACTOR_CONTROL, EVCC_TX_1_Msg.SELECTED_ATTENUATION_IN_DB,
-                     EVCC_TX_1_Msg.EV_Error_Code, EVCC_TX_1_Msg.DIFFERENTIAL_CURRENT_MEAS);
+//            snprintf((char *)uartString, BUFFER_SIZE,
+//                     "Received CAN ID %s: 0x%08lX, EVCC_STATUS_CODE: %d, PP_GUN_RESISTANCE: %d, CP_DUTY_CYCLE: %d%%, EVCC_READY: %d, GUN_DETECTED: %d, POSITIVE_CONTACTOR_CONTROL: %d, CHARGING_STATUS: %d, NEGATIVE_CONTACTOR_CONTROL: %d, SELECTED_ATTENUATION_IN_DB: %d, EV_Error_Code: %d, DIFFERENTIAL_CURRENT_MEAS: %d\r\n",
+//                     msgIdStr, rxData->msgId,
+//                     EVCC_TX_1_Msg.EVCC_STATUS_CODE, EVCC_TX_1_Msg.PP_GUN_RESISTANCE, EVCC_TX_1_Msg.CP_DUTY_CYCLE,
+//                     EVCC_TX_1_Msg.EVCC_READY, EVCC_TX_1_Msg.GUN_DETECTED, EVCC_TX_1_Msg.POSITIVE_CONTACTOR_CONTROL,
+//                     EVCC_TX_1_Msg.CHARGING_STATUS, EVCC_TX_1_Msg.NEGATIVE_CONTACTOR_CONTROL, EVCC_TX_1_Msg.SELECTED_ATTENUATION_IN_DB,
+//                     EVCC_TX_1_Msg.EV_Error_Code, EVCC_TX_1_Msg.DIFFERENTIAL_CURRENT_MEAS);
         }
         else if (rxData->msgId == MSG_ID_RX_2)
         {
             Unpack_EVCC_TX_2_ecudb(&EVCC_TX_2_Msg, rxData->data, rxData->dataLen);
-            snprintf((char *)uartString, BUFFER_SIZE,
-                     "Received CAN ID %s: 0x%08lX, TEMPERATURE_1_VALUE: %d, TEMPERATURE_2_VALUE: %d, OBC_DERATING_FACTOR: %d%%, TEMP_1_FAULT: %d, TEMP_2_FAULT: %d, GUN_LOCK_FAULT: %d, VEHICLE_IMMOBILIZE: %d, GUN_LOCK_FEEDBACK: %d, EVCC_GUN_LOCK_REQUEST_STATUS: %d, EVCC_GUN_UNLOCK_REQUEST_STATUS: %d\r\n",
-                     msgIdStr, rxData->msgId,
-                     EVCC_TX_2_Msg.TEMPERATURE_1_VALUE_ro, EVCC_TX_2_Msg.TEMPERATURE_2_VALUE_ro,
-                     EVCC_TX_2_Msg.OBC_DERATING_FACTOR, EVCC_TX_2_Msg.TEMP_1_FAULT, EVCC_TX_2_Msg.TEMP_2_FAULT,
-                     EVCC_TX_2_Msg.GUN_LOCK_FAULT, EVCC_TX_2_Msg.VEHICLE_IMMOBILIZE, EVCC_TX_2_Msg.GUN_LOCK_FEEDBACK,
-                     EVCC_TX_2_Msg.EVCC_GUN_LOCK_REQUEST_STATUS, EVCC_TX_2_Msg.EVCC_GUN_UNLOCK_REQUEST_STATUS);
+//            snprintf((char *)uartString, BUFFER_SIZE,
+//                     "Received CAN ID %s: 0x%08lX, TEMPERATURE_1_VALUE: %d, TEMPERATURE_2_VALUE: %d, OBC_DERATING_FACTOR: %d%%, TEMP_1_FAULT: %d, TEMP_2_FAULT: %d, GUN_LOCK_FAULT: %d, VEHICLE_IMMOBILIZE: %d, GUN_LOCK_FEEDBACK: %d, EVCC_GUN_LOCK_REQUEST_STATUS: %d, EVCC_GUN_UNLOCK_REQUEST_STATUS: %d\r\n",
+//                     msgIdStr, rxData->msgId,
+//                     EVCC_TX_2_Msg.TEMPERATURE_1_VALUE_ro, EVCC_TX_2_Msg.TEMPERATURE_2_VALUE_ro,
+//                     EVCC_TX_2_Msg.OBC_DERATING_FACTOR, EVCC_TX_2_Msg.TEMP_1_FAULT, EVCC_TX_2_Msg.TEMP_2_FAULT,
+//                     EVCC_TX_2_Msg.GUN_LOCK_FAULT, EVCC_TX_2_Msg.VEHICLE_IMMOBILIZE, EVCC_TX_2_Msg.GUN_LOCK_FEEDBACK,
+//                     EVCC_TX_2_Msg.EVCC_GUN_LOCK_REQUEST_STATUS, EVCC_TX_2_Msg.EVCC_GUN_UNLOCK_REQUEST_STATUS);
         }
         else if (rxData->msgId == MSG_ID_RX_3)
         {
             Unpack_EVCC_TX_3_ecudb(&EVCC_TX_3_Msg, rxData->data, rxData->dataLen);
-            snprintf((char *)uartString, BUFFER_SIZE,
-                     "Received CAN ID %s: 0x%08lX, SOFTWARE_VERSION: %d, CHARGER_MAX_CURRENT: %d, CHARGER_MIN_CURRENT: %d, CHARGER_MAX_VOLTAGE: %d\r\n",
-                     msgIdStr, rxData->msgId,
-                     EVCC_TX_3_Msg.SOFTWARE_VERSION_ro, EVCC_TX_3_Msg.CHARGER_MAX_CURRENT_ro,
-                     EVCC_TX_3_Msg.CHARGER_MIN_CURRENT_ro, EVCC_TX_3_Msg.CHARGER_MAX_VOLTAGE_ro);
+//            snprintf((char *)uartString, BUFFER_SIZE,
+//                     "Received CAN ID %s: 0x%08lX, SOFTWARE_VERSION: %d, CHARGER_MAX_CURRENT: %d, CHARGER_MIN_CURRENT: %d, CHARGER_MAX_VOLTAGE: %d\r\n",
+//                     msgIdStr, rxData->msgId,
+//                     EVCC_TX_3_Msg.SOFTWARE_VERSION_ro, EVCC_TX_3_Msg.CHARGER_MAX_CURRENT_ro,
+//                     EVCC_TX_3_Msg.CHARGER_MIN_CURRENT_ro, EVCC_TX_3_Msg.CHARGER_MAX_VOLTAGE_ro);
         }
         else if (rxData->msgId == MSG_ID_RX_4)
         {
             Unpack_EVCC_TX_4_ecudb(&EVCC_TX_4_Msg, rxData->data, rxData->dataLen);
-            snprintf((char *)uartString, BUFFER_SIZE,
-                     "Received CAN ID %s: 0x%08lX, CHARGER_MIN_VOLTAGE: %d, CHARGER_MAX_POWER: %d, CHARGER_PRESENT_VOLTAGE: %d, CHARGER_PRESENT_CURRENT: %d\r\n",
-                     msgIdStr, rxData->msgId,
-                     EVCC_TX_4_Msg.CHARGER_MIN_VOLTAGE_ro, EVCC_TX_4_Msg.CHARGER_MAX_POWER_ro,
-                     EVCC_TX_4_Msg.CHARGER_PRESENT_VOLTAGE_ro, EVCC_TX_4_Msg.CHARGER_PRESENT_CURRENT_ro);
+//            snprintf((char *)uartString, BUFFER_SIZE,
+//                     "Received CAN ID %s: 0x%08lX, CHARGER_MIN_VOLTAGE: %d, CHARGER_MAX_POWER: %d, CHARGER_PRESENT_VOLTAGE: %d, CHARGER_PRESENT_CURRENT: %d\r\n",
+//                     msgIdStr, rxData->msgId,
+//                     EVCC_TX_4_Msg.CHARGER_MIN_VOLTAGE_ro, EVCC_TX_4_Msg.CHARGER_MAX_POWER_ro,
+//                     EVCC_TX_4_Msg.CHARGER_PRESENT_VOLTAGE_ro, EVCC_TX_4_Msg.CHARGER_PRESENT_CURRENT_ro);
         }
         else if (rxData->msgId == MSG_ID_RX_5)
         {
             Unpack_EVCC_TX_5_ecudb(&EVCC_TX_5_Msg, rxData->data, rxData->dataLen);
-            snprintf((char *)uartString, BUFFER_SIZE,
-                     "Received CAN ID %s: 0x%08lX, TERMINATION_DETAIL: %d, EVCC_ERROR_CODES: %d, EVSE_ERROR_CODE: %d, CP_STATE: %d, SELECTED_APP_PROTOCOL: %d\r\n",
-                     msgIdStr, rxData->msgId,
-                     EVCC_TX_5_Msg.TERMINATION_DETAIL, EVCC_TX_5_Msg.EVCC_ERROR_CODES,
-                     EVCC_TX_5_Msg.EVSE_ERROR_CODE, EVCC_TX_5_Msg.CP_STATE, EVCC_TX_5_Msg.SELECTED_APP_PROTOCOL);
+//            snprintf((char *)uartString, BUFFER_SIZE,
+//                     "Received CAN ID %s: 0x%08lX, TERMINATION_DETAIL: %d, EVCC_ERROR_CODES: %d, EVSE_ERROR_CODE: %d, CP_STATE: %d, SELECTED_APP_PROTOCOL: %d\r\n",
+//                     msgIdStr, rxData->msgId,
+//                     EVCC_TX_5_Msg.TERMINATION_DETAIL, EVCC_TX_5_Msg.EVCC_ERROR_CODES,
+//                     EVCC_TX_5_Msg.EVSE_ERROR_CODE, EVCC_TX_5_Msg.CP_STATE, EVCC_TX_5_Msg.SELECTED_APP_PROTOCOL);
         }
         else
         {
@@ -485,6 +485,7 @@ void checkAndSetEVFlag(void) {
     if (ppResistanceOk && cpDutyCycleOk && gunDetected && gunLockOk && vehicleImmobilized && gunLockFeedbackOk &&
         hvFlag && !vehicleStopChargingFlag && !forceActuatorFlag && !chargingCompleteFlag) {
         EVCC_RX_2_Msg.EV_READY_FLAG = 1;  // Set EV Ready flag high
+        snprintf((char *)uartString, BUFFER_SIZE, "EV ready for Charging\r\n");
     } else {
         // Send appropriate error message over UART
         if (!ppResistanceOk) {
@@ -506,14 +507,12 @@ void checkAndSetEVFlag(void) {
         } else if (forceActuatorFlag) {
             snprintf((char *)uartString, BUFFER_SIZE, "Error: Force Actuator Unlock requested\r\n");
         } else if (chargingCompleteFlag) {
-            snprintf((char *)uartString, BUFFER_SIZE, "Error: Charging complete\r\n");
+            snprintf((char *)uartString, BUFFER_SIZE, "Charging complete\r\n");
         }
-
-        Lpuart_Uart_Ip_StatusType Uart_status = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
-        UART_Error_Handler(Uart_status);
-
         EVCC_RX_2_Msg.EV_READY_FLAG = 0;  // Reset EV Ready flag
     }
+    Lpuart_Uart_Ip_StatusType Uart_status = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 5000000);
+    UART_Error_Handler(Uart_status);
 }
 
 void setEVCC_RX_1_Values(void) {
@@ -602,7 +601,7 @@ void sendCANMessage(void) {
         while (FlexCAN_Ip_GetTransferStatus(INST_FLEXCAN_0, TX_MB_IDX) != FLEXCAN_STATUS_SUCCESS) {
             FlexCAN_Ip_MainFunctionWrite(INST_FLEXCAN_0, TX_MB_IDX);
         }
-    	snprintf((char *)uartString, BUFFER_SIZE, "Error: EV not ready for Charging");
+    	snprintf((char *)uartString, BUFFER_SIZE, "Error: EV not ready for Charging\r\n");
     	Lpuart_Uart_Ip_StatusType Uart_status = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
     	UART_Error_Handler(Uart_status);
     }
