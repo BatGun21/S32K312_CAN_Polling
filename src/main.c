@@ -139,6 +139,10 @@ int main(void)
     while (1)
     {
     	receiveCANMessage();
+        // Send the current SOC level over UART
+        snprintf((char *)uartString, BUFFER_SIZE, "Current SOC: %d%%\r\n", EVCC_RX_1_Msg.SOC_ro);
+        Lpuart_Uart_Ip_StatusType Uart_status = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+        UART_Error_Handler(Uart_status);
     	if(sendCanMsgFlag)
     	{
     		sendCANMessage();
