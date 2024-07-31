@@ -23,6 +23,9 @@
 #include "vector__xxx_ecudb-binutil.h"
 #include "canmonitorutil.h"
 
+// Define TEST_MODE to enable test code
+//#define TEST_MODE
+
 #define MSG_ID_RX_1 0x350U
 #define MSG_ID_RX_2 0xECC01U
 #define MSG_ID_RX_3 0x361U
@@ -112,20 +115,26 @@ bool checkIsolation(void);
 bool checkActuator(void);
 uint8_t check_SOC(void);
 
+// Test function prototypes
+void runTests(void);
+void testPackUnpack(void);
+void testFlagFunctions(void);
+void simulateCANMessages(void);
+
 
 int main(void)
 {
     Clock_Init();
 
-    /* Initialize the Osif driver */
+    // Initialize the Osif driver
     OsIf_Init(NULL_PTR);
 
-    /* Init Pins */
+    // Init Pins
     Siul2_Port_Ip_Init(NUM_OF_CONFIGURED_PINS0, g_pin_mux_InitConfigArr0);
 
     Siul2_Dio_Ip_WritePin(CAN0_STB_PORT, CAN0_STB_PIN, 0U);   // CAN0_STB  : PTC-20
 
-    /* Initialize interrupts */
+    // Initialize interrupts
     IntCtrl_Ip_Init(&IntCtrlConfig_0);
 
     PIT_Init();
@@ -136,23 +145,28 @@ int main(void)
 
     Siul2_Dio_Ip_WritePin(CAN0_STB_PORT, CAN0_STB_PIN, 1U);   //CAN0_STB
 
-    while (1)
-    {
-    	receiveCANMessage();
-        // Send the current SOC level over UART
-        snprintf((char *)uartString, BUFFER_SIZE, "Current SOC: %d%%\r\n", EVCC_RX_1_Msg.SOC_ro);
-        Lpuart_Uart_Ip_StatusType Uart_status = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
-        UART_Error_Handler(Uart_status);
-    	if(sendCanMsgFlag)
-    	{
-    		sendCANMessage();
-    		Siul2_Dio_Ip_WritePin(LED_PORT, LED_GREEN_PIN, 0); // Turn off GREEN LED
-    		sendCanMsgFlag = 0;
-    	}
-    }
+    #ifdef TEST_MODE
+        runTests();
+    #else
+        while (1)
+        {
+            receiveCANMessage();
+            // Send the current SOC level over UART
+            snprintf((char *)uartString, BUFFER_SIZE, "Current SOC: %d%%\r\n", EVCC_RX_1_Msg.SOC_ro);
+            Lpuart_Uart_Ip_StatusType Uart_status = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+            UART_Error_Handler(Uart_status);
+            if(sendCanMsgFlag)
+            {
+            	Siul2_Dio_Ip_WritePin(LED_PORT, LED_GREEN_PIN, 0); // Turn off GREEN LED
+                sendCANMessage();
+                sendCanMsgFlag = 0;
+            }
+        }
+    #endif
 
     return 0;
 }
+
 
 /* Function Definitions */
 void PIT_Init(void)
@@ -229,7 +243,6 @@ void UART_Error_Handler(Lpuart_Uart_Ip_StatusType Status)
     {
         Siul2_Dio_Ip_WritePin(LED_PORT, LED_RED_PIN, 0); // Turn off RED LED
         Siul2_Dio_Ip_WritePin(LED_PORT, LED_BLUE_PIN, 0); // Turn off BLUE LED
-        Siul2_Dio_Ip_WritePin(LED_PORT, LED_GREEN_PIN, 0); // Turn off GREEN LED
     }
 }
 
@@ -377,7 +390,7 @@ uint8_t check_SOC(void) {
 
 bool checkIsolation(void) {
     // Check for isolation issue via UART
-    char isolationMsg[] = "isolation gone";
+    char isolationMsg[] = "Isolation Gone";
     Lpuart_Uart_Ip_StatusType status = Lpuart_Uart_Ip_SyncReceive(LPUART_UART_INSTANCE, (uint8_t *)uartString, strlen(isolationMsg), 50000000);
 
     if (status == LPUART_UART_IP_STATUS_SUCCESS && strncmp((char *)uartString, isolationMsg, strlen(isolationMsg)) == 0) {
@@ -388,7 +401,7 @@ bool checkIsolation(void) {
 
 bool checkActuator(void) {
     // Check for actuator unlock via UART
-    char actuatorMsg[] = "force unlock actuator";
+    char actuatorMsg[] = "Force Unlock Actuator";
     Lpuart_Uart_Ip_StatusType status = Lpuart_Uart_Ip_SyncReceive(LPUART_UART_INSTANCE, (uint8_t *)uartString, strlen(actuatorMsg), 50000000);
 
     if (status == LPUART_UART_IP_STATUS_SUCCESS && strncmp((char *)uartString, actuatorMsg, strlen(actuatorMsg)) == 0) {
@@ -396,7 +409,6 @@ bool checkActuator(void) {
     }
     return false;  // Assume actuator unlock is not pressed
 }
-
 
 bool checkAndSetHVFlag(void) {
     bool hvIsolationOk = true;
@@ -442,7 +454,6 @@ bool checkAndSetVehicleStopChargingFlag(void) {
 
     return vehicleStopCharging;
 }
-
 
 bool checkAndSetForceActuatorFlag(void) {
     bool forceActuatorUnlock = false;
@@ -611,9 +622,211 @@ void sendCANMessage(void) {
     }
 }
 
+#ifdef TEST_MODE
 
+void runTests(void) {
+    testPackUnpack();
+    testFlagFunctions();
+    simulateCANMessages();
+}
 
+void testPackUnpack(void) {
+    // Test scenarios for packing and unpacking CAN messages
+    EVCC_RX_1_t unpackedMsg1;
+    uint8_t evcc_rx_1_data[EVCC_RX_1_DLC];
+    uint8_t evcc_rx_1_len;
+    uint8_t evcc_rx_1_ide;
+    uint32_t evcc_rx_1_id = Pack_EVCC_RX_1_ecudb(&EVCC_RX_1_Msg, evcc_rx_1_data, &evcc_rx_1_len, &evcc_rx_1_ide);
+    Unpack_EVCC_RX_1_ecudb(&unpackedMsg1, evcc_rx_1_data, evcc_rx_1_len);
 
+    if (memcmp(&EVCC_RX_1_Msg, &unpackedMsg1, sizeof(EVCC_RX_1_Msg)) == 0) {
+        snprintf((char *)uartString, BUFFER_SIZE, "EVCC_RX_1 Pack/Unpack test PASSED\r\n");
+    } else {
+        snprintf((char *)uartString, BUFFER_SIZE, "EVCC_RX_1 Pack/Unpack test FAILED\r\n");
+    }
+    Lpuart_Uart_Ip_StatusType uartStatus = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+    UART_Error_Handler(uartStatus);
 
+    EVCC_RX_2_t unpackedMsg2;
+    uint8_t evcc_rx_2_data[EVCC_RX_2_DLC];
+    uint8_t evcc_rx_2_len;
+    uint8_t evcc_rx_2_ide;
+    uint32_t evcc_rx_2_id = Pack_EVCC_RX_2_ecudb(&EVCC_RX_2_Msg, evcc_rx_2_data, &evcc_rx_2_len, &evcc_rx_2_ide);
+    Unpack_EVCC_RX_2_ecudb(&unpackedMsg2, evcc_rx_2_data, evcc_rx_2_len);
+
+    if (memcmp(&EVCC_RX_2_Msg, &unpackedMsg2, sizeof(EVCC_RX_2_Msg)) == 0) {
+        snprintf((char *)uartString, BUFFER_SIZE, "EVCC_RX_2 Pack/Unpack test PASSED\r\n");
+    } else {
+        snprintf((char *)uartString, BUFFER_SIZE, "EVCC_RX_2 Pack/Unpack test FAILED\r\n");
+    }
+    uartStatus = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+    UART_Error_Handler(uartStatus);
+
+    // Test flag setting functions
+    snprintf((char *)uartString, BUFFER_SIZE, "Testing HV Flag\r\n");
+    uartStatus = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+    UART_Error_Handler(uartStatus);
+    bool hvFlag = checkAndSetHVFlag();
+    snprintf((char *)uartString, BUFFER_SIZE, "HV Flag test result: %d\r\n", hvFlag);
+    uartStatus = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+    UART_Error_Handler(uartStatus);
+
+    snprintf((char *)uartString, BUFFER_SIZE, "Testing Vehicle Stop Charging Flag\r\n");
+    uartStatus = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+    UART_Error_Handler(uartStatus);
+    bool vehicleStopChargingFlag = checkAndSetVehicleStopChargingFlag();
+    snprintf((char *)uartString, BUFFER_SIZE, "Vehicle Stop Charging Flag test result: %d\r\n", vehicleStopChargingFlag);
+    uartStatus = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+    UART_Error_Handler(uartStatus);
+
+    snprintf((char *)uartString, BUFFER_SIZE, "Testing Force Actuator Flag\r\n");
+    uartStatus = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+    UART_Error_Handler(uartStatus);
+    bool forceActuatorFlag = checkAndSetForceActuatorFlag();
+    snprintf((char *)uartString, BUFFER_SIZE, "Force Actuator Flag test result: %d\r\n", forceActuatorFlag);
+    uartStatus = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+    UART_Error_Handler(uartStatus);
+
+    snprintf((char *)uartString, BUFFER_SIZE, "Testing Charging Complete Flag\r\n");
+    uartStatus = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+    UART_Error_Handler(uartStatus);
+    bool chargingCompleteFlag = checkAndSetChargingCompleteFlag();
+    snprintf((char *)uartString, BUFFER_SIZE, "Charging Complete Flag test result: %d\r\n", chargingCompleteFlag);
+    uartStatus = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+    UART_Error_Handler(uartStatus);
+}
+
+void testFlagFunctions(void) {
+    // Test HV flag function
+    bool hvFlag = checkAndSetHVFlag();
+    snprintf((char *)uartString, BUFFER_SIZE, "HV Flag test result: %d\r\n", hvFlag);
+    Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+
+    // Test Vehicle Stop Charging flag function
+    bool vehicleStopChargingFlag = checkAndSetVehicleStopChargingFlag();
+    snprintf((char *)uartString, BUFFER_SIZE, "Vehicle Stop Charging Flag test result: %d\r\n", vehicleStopChargingFlag);
+    Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+
+    // Test Force Actuator flag function
+    bool forceActuatorFlag = checkAndSetForceActuatorFlag();
+    snprintf((char *)uartString, BUFFER_SIZE, "Force Actuator Flag test result: %d\r\n", forceActuatorFlag);
+    Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+
+    // Test Charging Complete flag function
+    bool chargingCompleteFlag = checkAndSetChargingCompleteFlag();
+    snprintf((char *)uartString, BUFFER_SIZE, "Charging Complete Flag test result: %d\r\n", chargingCompleteFlag);
+    Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+}
+
+void simulateCANMessages(void) {
+    // Scenario 1: Normal Operation
+    snprintf((char *)uartString, BUFFER_SIZE, "Testing Scenario: Normal Operation\r\n");
+    Lpuart_Uart_Ip_StatusType uartStatus = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+    UART_Error_Handler(uartStatus);
+
+    uint8_t evcc_tx_1_data_normal[EVCC_TX_1_DLC] = {0x00, 0x00, 0x04, 0x00, 0x02, 0x00, 0x00, 0x00};  // Example normal data
+    rxData1.msgId = MSG_ID_RX_1;
+    rxData1.dataLen = EVCC_TX_1_DLC;
+    memcpy(rxData1.data, evcc_tx_1_data_normal, EVCC_TX_1_DLC);
+    processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData1, "0x350");
+
+    uint8_t evcc_tx_2_data_normal[EVCC_TX_2_DLC] = {0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00};  // Example normal data
+    rxData2.msgId = MSG_ID_RX_2;
+    rxData2.dataLen = EVCC_TX_2_DLC;
+    memcpy(rxData2.data, evcc_tx_2_data_normal, EVCC_TX_2_DLC);
+    processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData2, "0xECC01");
+
+    // Scenario 2: Isolation Breached
+    snprintf((char *)uartString, BUFFER_SIZE, "Testing Scenario: Isolation Breached\r\n");
+    uartStatus = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+    UART_Error_Handler(uartStatus);
+
+    uint8_t evcc_tx_1_data_isolation[EVCC_TX_1_DLC] = {0x00, 0x00, 0x04, 0x00, 0x02, 0x00, 0x00, 0x00};  // Same as normal for this example
+    rxData1.dataLen = EVCC_TX_1_DLC;
+    memcpy(rxData1.data, evcc_tx_1_data_isolation, EVCC_TX_1_DLC);
+    processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData1, "0x350");
+
+    uint8_t evcc_tx_2_data_isolation[EVCC_TX_2_DLC] = {0x00, 0x00, 0x00, 0x08, 0x10, 0x00, 0x00, 0x00};  // HV Isolation fault (bit 3)
+    rxData2.dataLen = EVCC_TX_2_DLC;
+    memcpy(rxData2.data, evcc_tx_2_data_isolation, EVCC_TX_2_DLC);
+    processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData2, "0xECC01");
+
+    // Scenario 3: Forced Unlock Requested
+    snprintf((char *)uartString, BUFFER_SIZE, "Testing Scenario: Forced Unlock Requested\r\n");
+    uartStatus = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+    UART_Error_Handler(uartStatus);
+
+    uint8_t evcc_tx_1_data_unlock[EVCC_TX_1_DLC] = {0x00, 0x00, 0x04, 0x00, 0x02, 0x00, 0x00, 0x00};  // Same as normal for this example
+    rxData1.dataLen = EVCC_TX_1_DLC;
+    memcpy(rxData1.data, evcc_tx_1_data_unlock, EVCC_TX_1_DLC);
+    processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData1, "0x350");
+
+    uint8_t evcc_tx_2_data_unlock[EVCC_TX_2_DLC] = {0x10, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00};  // Force unlock request (bit 4)
+    rxData2.dataLen = EVCC_TX_2_DLC;
+    memcpy(rxData2.data, evcc_tx_2_data_unlock, EVCC_TX_2_DLC);
+    processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData2, "0xECC01");
+
+    // Scenario 4: Charging Complete
+    snprintf((char *)uartString, BUFFER_SIZE, "Testing Scenario: Charging Complete\r\n");
+    uartStatus = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+    UART_Error_Handler(uartStatus);
+
+    uint8_t evcc_tx_1_data_complete[EVCC_TX_1_DLC] = {0x00, 0x00, 0x04, 0x00, 0x02, 0x00, 0x00, 0x00};  // Same as normal for this example
+    rxData1.dataLen = EVCC_TX_1_DLC;
+    memcpy(rxData1.data, evcc_tx_1_data_complete, EVCC_TX_1_DLC);
+    processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData1, "0x350");
+
+    uint8_t evcc_tx_2_data_complete[EVCC_TX_2_DLC] = {0x00, 0x00, 0x00, 0x00, 0x10, 0x01, 0x00, 0x00};  // Charging complete (bit 0)
+    rxData2.dataLen = EVCC_TX_2_DLC;
+    memcpy(rxData2.data, evcc_tx_2_data_complete, EVCC_TX_2_DLC);
+    processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData2, "0xECC01");
+
+    // Scenario 5: Charging Stopped due to EVSE Error
+    snprintf((char *)uartString, BUFFER_SIZE, "Testing Scenario: Charging Stopped due to EVSE Error\r\n");
+    uartStatus = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+    UART_Error_Handler(uartStatus);
+
+    uint8_t evcc_tx_1_data_evse_error[EVCC_TX_1_DLC] = {0x00, 0x00, 0x04, 0x00, 0x02, 0x00, 0x00, 0x00};  // Same as normal for this example
+    rxData1.dataLen = EVCC_TX_1_DLC;
+    memcpy(rxData1.data, evcc_tx_1_data_evse_error, EVCC_TX_1_DLC);
+    processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData1, "0x350");
+
+    uint8_t evcc_tx_2_data_evse_error[EVCC_TX_2_DLC] = {0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x06, 0x00};  // EVSE error code 6
+    rxData2.dataLen = EVCC_TX_2_DLC;
+    memcpy(rxData2.data, evcc_tx_2_data_evse_error, EVCC_TX_2_DLC);
+    processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData2, "0xECC01");
+
+    // Scenario 6: Charging Stopped due to EVCC Error
+    snprintf((char *)uartString, BUFFER_SIZE, "Testing Scenario: Charging Stopped due to EVCC Error\r\n");
+    uartStatus = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+    UART_Error_Handler(uartStatus);
+
+    uint8_t evcc_tx_1_data_evcc_error[EVCC_TX_1_DLC] = {0x00, 0x00, 0x04, 0x00, 0x02, 0x00, 0x00, 0x00};  // Same as normal for this example
+    rxData1.dataLen = EVCC_TX_1_DLC;
+    memcpy(rxData1.data, evcc_tx_1_data_evcc_error, EVCC_TX_1_DLC);
+    processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData1, "0x350");
+
+    uint8_t evcc_tx_2_data_evcc_error[EVCC_TX_2_DLC] = {0x00, 0x00, 0x00, 0x00, 0x10, 0x03, 0x00, 0x00};  // EVCC error code 3
+    rxData2.dataLen = EVCC_TX_2_DLC;
+    memcpy(rxData2.data, evcc_tx_2_data_evcc_error, EVCC_TX_2_DLC);
+    processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData2, "0xECC01");
+
+    // Scenario 7: Charging Stopped due to EV Error
+    snprintf((char *)uartString, BUFFER_SIZE, "Testing Scenario: Charging Stopped due to EV Error\r\n");
+    uartStatus = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)uartString, strlen((char *)uartString), 50000000);
+    UART_Error_Handler(uartStatus);
+
+    uint8_t evcc_tx_1_data_ev_error[EVCC_TX_1_DLC] = {0x00, 0x00, 0x04, 0x00, 0x02, 0x00, 0x00, 0x00};  // Same as normal for this example
+    rxData1.dataLen = EVCC_TX_1_DLC;
+    memcpy(rxData1.data, evcc_tx_1_data_ev_error, EVCC_TX_1_DLC);
+    processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData1, "0x350");
+
+    uint8_t evcc_tx_2_data_ev_error[EVCC_TX_2_DLC] = {0x00, 0x00, 0x00, 0x00, 0x10, 0x09, 0x00, 0x00};  // EV error code 9
+    rxData2.dataLen = EVCC_TX_2_DLC;
+    memcpy(rxData2.data, evcc_tx_2_data_ev_error, EVCC_TX_2_DLC);
+    processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData2, "0xECC01");
+}
+
+#endif
 
 
