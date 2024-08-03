@@ -24,7 +24,7 @@
 #include "canmonitorutil.h"
 
 // Define TEST_MODE to enable test code
-#define TEST_MODE 00
+//#define TEST_MODE 00
 
 #define MSG_ID_RX_1 0x350U
 #define MSG_ID_RX_2 0xECC01U
@@ -78,8 +78,9 @@ typedef struct {
 #define CODE_SCENARIO_EV_ERROR 0x07
 #define CODE_EV_READY_FOR_CHARGING 0x80
 #define CODE_EV_NOT_READY_FOR_CHARGING 0x81
+#define CODE_EV_NOT_READY_FOR_CHARGING_ERROR 0x82
 
-// Additional error codes
+//  Error codes
 #define CODE_EV_ERROR_1 0x08
 #define CODE_EV_ERROR_2 0x09
 #define CODE_EV_ERROR_3 0x0A
@@ -89,6 +90,20 @@ typedef struct {
 #define CODE_EVCC_ERROR_1 0x0E
 #define CODE_EVCC_ERROR_2 0x0F
 #define CODE_EVCC_ERROR_3 0x10
+#define CODE_PP_RESISTANCE_ERROR 0xA0
+#define CODE_CP_DUTY_CYCLE_ERROR 0xA1
+#define CODE_GUN_NOT_DETECTED_ERROR 0xA2
+#define CODE_GUN_LOCK_FAULT_ERROR 0xA3
+#define CODE_VEHICLE_NOT_IMMOBILIZED_ERROR 0xA4
+#define CODE_HV_ISOLATION_ERROR 0xA5
+#define CODE_FORCE_ACTUATOR_UNLOCK_ERROR 0xA6
+#define CODE_CHARGING_COMPLETE_ERROR 0xA7
+#define CODE_GUN_LOCK_FEEDBACK_ERROR 0xA9
+#define CODE_VEHICLE_STOP_CHARGING_ERROR 0xAA
+#define CODE_EVCC_RX_1_PACK_UNPACK_TEST_PASSED 0xA8
+#define CODE_EVCC_RX_1_PACK_UNPACK_TEST_FAILED 0xAB
+#define CODE_EVCC_RX_2_PACK_UNPACK_TEST_PASSED 0xAC
+#define CODE_EVCC_RX_2_PACK_UNPACK_TEST_FAILED 0xAD
 
 // Define hexadecimal codes for each message
 #define CODE_EVCC_TX_1 0x20
@@ -96,8 +111,6 @@ typedef struct {
 #define CODE_EVCC_TX_3 0x22
 #define CODE_EVCC_TX_4 0x23
 #define CODE_EVCC_TX_5 0x24
-#define CODE_CAN_TIMEOUT 0x30
-#define CODE_CAN_UNKNOWN 0x31
 
 // Define hexadecimal codes for data points and messages
 #define CODE_PP_GUN_RESISTANCE 0x40
@@ -135,6 +148,16 @@ typedef struct {
 #define CODE_SELECTED_APP_PROTOCOL 0x72
 #define CODE_CAN_TIMEOUT 0x30
 #define CODE_CAN_UNKNOWN 0x31
+
+// Define codes for tests
+#define CODE_TESTING_HV_FLAG 0x90
+#define CODE_HV_FLAG_TEST_RESULT 0x91
+#define CODE_TESTING_VEHICLE_STOP_CHARGING_FLAG 0x92
+#define CODE_VEHICLE_STOP_CHARGING_FLAG_TEST_RESULT 0x93
+#define CODE_TESTING_FORCE_ACTUATOR_FLAG 0x94
+#define CODE_FORCE_ACTUATOR_FLAG_TEST_RESULT 0x95
+#define CODE_TESTING_CHARGING_COMPLETE_FLAG 0x96
+#define CODE_CHARGING_COMPLETE_FLAG_TEST_RESULT 0x97
 
 /* Define the CAN message buffer for EVCC_TX*/
 ChargingDataPoint chargingLUT[LUT_SIZE];
@@ -311,10 +334,9 @@ void sendUARTCode(uint8_t code)
     UART_Error_Handler(uartStatus);
 }
 
-void sendUARTDataCode(uint8_t code, int32_t data)
-{
-    char codeDataStr[12];
-    snprintf(codeDataStr, sizeof(codeDataStr), "%02X%08lX\n", code, data);
+void sendUARTDataCode(uint8_t code, int32_t data) {
+    char codeDataStr[14];
+    snprintf(codeDataStr, sizeof(codeDataStr), "%02X%08lu\n", code, data);
     Lpuart_Uart_Ip_StatusType uartStatus = Lpuart_Uart_Ip_SyncSend(LPUART_UART_INSTANCE, (const uint8 *)codeDataStr, strlen(codeDataStr), 50000000);
     UART_Error_Handler(uartStatus);
 }
@@ -501,8 +523,7 @@ bool checkAndSetHVFlag(void)
     return hvIsolationOk;
 }
 
-bool checkAndSetVehicleStopChargingFlag(void)
-{
+bool checkAndSetVehicleStopChargingFlag(void) {
     bool vehicleStopCharging = false;
 
     // Monitor EV error codes from transmit frame 1 byte 6
@@ -519,11 +540,11 @@ bool checkAndSetVehicleStopChargingFlag(void)
 
         // Send appropriate error message over UART
         if (evErrorCode != 0) {
-            sendUARTDataCode(CODE_EV_ERROR_CODE, evErrorCode);
+            sendUARTDataCode(CODE_EV_ERROR_1, evErrorCode);
         } else if (evccErrorCode != 0) {
-            sendUARTDataCode(CODE_EVCC_ERROR_CODES, evccErrorCode);
+            sendUARTDataCode(CODE_EVCC_ERROR_2, evccErrorCode);
         } else if (evseErrorCode != 0) {
-            sendUARTDataCode(CODE_EVSE_ERROR_CODE, evseErrorCode);
+            sendUARTDataCode(CODE_EVSE_ERROR_1, evseErrorCode);
         }
     }
 
@@ -561,8 +582,7 @@ bool checkAndSetChargingCompleteFlag(void)
     return chargingComplete;
 }
 
-void checkAndSetEVFlag(void)
-{
+void checkAndSetEVFlag(void) {
     bool ppResistanceOk = (EVCC_TX_1_Msg.PP_GUN_RESISTANCE >= 900 && EVCC_TX_1_Msg.PP_GUN_RESISTANCE <= 1100);
     bool cpDutyCycleOk = (EVCC_TX_1_Msg.CP_DUTY_CYCLE > 0 && EVCC_TX_1_Msg.CP_DUTY_CYCLE <= 10); // Typical value is 4%, so within 10%
     bool gunDetected = (EVCC_TX_1_Msg.GUN_DETECTED == 1);
@@ -582,25 +602,27 @@ void checkAndSetEVFlag(void)
     } else {
         // Send appropriate error message over UART
         if (!ppResistanceOk) {
-            sendUARTDataCode(CODE_PP_GUN_RESISTANCE, EVCC_TX_1_Msg.PP_GUN_RESISTANCE);
+            sendUARTDataCode(CODE_PP_RESISTANCE_ERROR, EVCC_TX_1_Msg.PP_GUN_RESISTANCE);
         } else if (!cpDutyCycleOk) {
-            sendUARTDataCode(CODE_CP_DUTY_CYCLE, EVCC_TX_1_Msg.CP_DUTY_CYCLE);
+            sendUARTDataCode(CODE_CP_DUTY_CYCLE_ERROR, EVCC_TX_1_Msg.CP_DUTY_CYCLE);
         } else if (!gunDetected) {
-            sendUARTCode(CODE_GUN_DETECTED);
+            sendUARTCode(CODE_GUN_NOT_DETECTED_ERROR);
         } else if (!gunLockOk) {
-            sendUARTCode(CODE_GUN_LOCK_FAULT);
+            sendUARTCode(CODE_GUN_LOCK_FAULT_ERROR);
         } else if (!vehicleImmobilized) {
-            sendUARTCode(CODE_VEHICLE_IMMOBILIZE);
+            sendUARTCode(CODE_VEHICLE_NOT_IMMOBILIZED_ERROR);
         } else if (!gunLockFeedbackOk) {
-            sendUARTCode(CODE_GUN_LOCK_FEEDBACK);
+            sendUARTCode(CODE_GUN_LOCK_FEEDBACK_ERROR);
         } else if (!hvFlag) {
-            sendUARTCode(CODE_EV_READY_FOR_CHARGING);
+            sendUARTCode(CODE_HV_ISOLATION_ERROR);
         } else if (vehicleStopChargingFlag) {
-            sendUARTCode(CODE_EV_READY_FOR_CHARGING);
+            sendUARTCode(CODE_VEHICLE_STOP_CHARGING_ERROR);
         } else if (forceActuatorFlag) {
-            sendUARTCode(CODE_EV_READY_FOR_CHARGING);
+            sendUARTCode(CODE_FORCE_ACTUATOR_UNLOCK_ERROR);
         } else if (chargingCompleteFlag) {
-            sendUARTCode(CODE_EV_READY_FOR_CHARGING);
+            sendUARTCode(CODE_CHARGING_COMPLETE_ERROR);
+        } else {
+            sendUARTCode(CODE_EV_NOT_READY_FOR_CHARGING_ERROR);
         }
         EVCC_RX_2_Msg.EV_READY_FLAG = 0;  // Reset EV Ready flag
     }
@@ -710,21 +732,20 @@ void runTests(void)
     simulateCANMessages();
 }
 
-void testPackUnpack(void)
-{
+void testPackUnpack(void) {
     // Test scenarios for packing and unpacking CAN messages
     EVCC_RX_1_t unpackedMsg1;
     uint8_t evcc_rx_1_data[EVCC_RX_1_DLC];
     uint8_t evcc_rx_1_len;
     uint8_t evcc_rx_1_ide;
     uint32_t evcc_rx_1_id = Pack_EVCC_RX_1_ecudb(&EVCC_RX_1_Msg, evcc_rx_1_data, &evcc_rx_1_len, &evcc_rx_1_ide);
-    (void)evcc_rx_1_id;  // Suppress unused variable warning
+    (void)evcc_rx_1_id;
     Unpack_EVCC_RX_1_ecudb(&unpackedMsg1, evcc_rx_1_data, evcc_rx_1_len);
 
     if (memcmp(&EVCC_RX_1_Msg, &unpackedMsg1, sizeof(EVCC_RX_1_Msg)) == 0) {
-        sendUARTCode(0x10);  // Code for EVCC_RX_1 Pack/Unpack test PASSED
+        sendUARTCode(CODE_EVCC_RX_1_PACK_UNPACK_TEST_PASSED);
     } else {
-        sendUARTCode(0x11);  // Code for EVCC_RX_1 Pack/Unpack test FAILED
+        sendUARTCode(CODE_EVCC_RX_1_PACK_UNPACK_TEST_FAILED);
     }
 
     EVCC_RX_2_t unpackedMsg2;
@@ -732,14 +753,31 @@ void testPackUnpack(void)
     uint8_t evcc_rx_2_len;
     uint8_t evcc_rx_2_ide;
     uint32_t evcc_rx_2_id = Pack_EVCC_RX_2_ecudb(&EVCC_RX_2_Msg, evcc_rx_2_data, &evcc_rx_2_len, &evcc_rx_2_ide);
-    (void)evcc_rx_2_id;  // Suppress unused variable warning
+    (void)evcc_rx_2_id;
     Unpack_EVCC_RX_2_ecudb(&unpackedMsg2, evcc_rx_2_data, evcc_rx_2_len);
 
     if (memcmp(&EVCC_RX_2_Msg, &unpackedMsg2, sizeof(EVCC_RX_2_Msg)) == 0) {
-        sendUARTCode(0x12);  // Code for EVCC_RX_2 Pack/Unpack test PASSED
+        sendUARTCode(CODE_EVCC_RX_2_PACK_UNPACK_TEST_PASSED);
     } else {
-        sendUARTCode(0x13);  // Code for EVCC_RX_2 Pack/Unpack test FAILED
+        sendUARTCode(CODE_EVCC_RX_2_PACK_UNPACK_TEST_FAILED);
     }
+
+    // Test flag setting functions
+    sendUARTCode(CODE_TESTING_HV_FLAG);
+    bool hvFlag = checkAndSetHVFlag();
+    sendUARTDataCode(CODE_HV_FLAG_TEST_RESULT, hvFlag);
+
+    sendUARTCode(CODE_TESTING_VEHICLE_STOP_CHARGING_FLAG);
+    bool vehicleStopChargingFlag = checkAndSetVehicleStopChargingFlag();
+    sendUARTDataCode(CODE_VEHICLE_STOP_CHARGING_FLAG_TEST_RESULT, vehicleStopChargingFlag);
+
+    sendUARTCode(CODE_TESTING_FORCE_ACTUATOR_FLAG);
+    bool forceActuatorFlag = checkAndSetForceActuatorFlag();
+    sendUARTDataCode(CODE_FORCE_ACTUATOR_FLAG_TEST_RESULT, forceActuatorFlag);
+
+    sendUARTCode(CODE_TESTING_CHARGING_COMPLETE_FLAG);
+    bool chargingCompleteFlag = checkAndSetChargingCompleteFlag();
+    sendUARTDataCode(CODE_CHARGING_COMPLETE_FLAG_TEST_RESULT, chargingCompleteFlag);
 }
 
 void testFlagFunctions(void)
@@ -761,8 +799,7 @@ void testFlagFunctions(void)
     sendUARTDataCode(0x23, chargingCompleteFlag);  // Code for Charging Complete Flag test result
 }
 
-void simulateCANMessages(void)
-{
+void simulateCANMessages(void) {
     // Scenario 1: Normal Operation
     sendUARTCode(CODE_SCENARIO_NORMAL);
     uint8_t evcc_tx_1_data_normal[EVCC_TX_1_DLC] = {0x00, 0x00, 0x04, 0x00, 0x02, 0x00, 0x00, 0x00};  // Example normal data
