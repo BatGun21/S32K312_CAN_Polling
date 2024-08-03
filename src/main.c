@@ -62,7 +62,6 @@ typedef struct {
     uint16_t nominalBattCapacity;  // in Ah
 } ChargingDataPoint;
 
-
 /* PIT instance used - 0 */
 #define PIT_INST_0 0U
 #define CH_0 0U
@@ -738,8 +737,7 @@ void testPackUnpack(void) {
     uint8_t evcc_rx_1_data[EVCC_RX_1_DLC];
     uint8_t evcc_rx_1_len;
     uint8_t evcc_rx_1_ide;
-    uint32_t evcc_rx_1_id = Pack_EVCC_RX_1_ecudb(&EVCC_RX_1_Msg, evcc_rx_1_data, &evcc_rx_1_len, &evcc_rx_1_ide);
-    (void)evcc_rx_1_id;
+    Pack_EVCC_RX_1_ecudb(&EVCC_RX_1_Msg, evcc_rx_1_data, &evcc_rx_1_len, &evcc_rx_1_ide);
     Unpack_EVCC_RX_1_ecudb(&unpackedMsg1, evcc_rx_1_data, evcc_rx_1_len);
 
     if (memcmp(&EVCC_RX_1_Msg, &unpackedMsg1, sizeof(EVCC_RX_1_Msg)) == 0) {
@@ -752,8 +750,7 @@ void testPackUnpack(void) {
     uint8_t evcc_rx_2_data[EVCC_RX_2_DLC];
     uint8_t evcc_rx_2_len;
     uint8_t evcc_rx_2_ide;
-    uint32_t evcc_rx_2_id = Pack_EVCC_RX_2_ecudb(&EVCC_RX_2_Msg, evcc_rx_2_data, &evcc_rx_2_len, &evcc_rx_2_ide);
-    (void)evcc_rx_2_id;
+    Pack_EVCC_RX_2_ecudb(&EVCC_RX_2_Msg, evcc_rx_2_data, &evcc_rx_2_len, &evcc_rx_2_ide);
     Unpack_EVCC_RX_2_ecudb(&unpackedMsg2, evcc_rx_2_data, evcc_rx_2_len);
 
     if (memcmp(&EVCC_RX_2_Msg, &unpackedMsg2, sizeof(EVCC_RX_2_Msg)) == 0) {
@@ -761,42 +758,28 @@ void testPackUnpack(void) {
     } else {
         sendUARTCode(CODE_EVCC_RX_2_PACK_UNPACK_TEST_FAILED);
     }
+}
 
-    // Test flag setting functions
+void testFlagFunctions(void) {
+    // Test HV flag function
     sendUARTCode(CODE_TESTING_HV_FLAG);
     bool hvFlag = checkAndSetHVFlag();
     sendUARTDataCode(CODE_HV_FLAG_TEST_RESULT, hvFlag);
 
+    // Test Vehicle Stop Charging flag function
     sendUARTCode(CODE_TESTING_VEHICLE_STOP_CHARGING_FLAG);
     bool vehicleStopChargingFlag = checkAndSetVehicleStopChargingFlag();
     sendUARTDataCode(CODE_VEHICLE_STOP_CHARGING_FLAG_TEST_RESULT, vehicleStopChargingFlag);
 
+    // Test Force Actuator flag function
     sendUARTCode(CODE_TESTING_FORCE_ACTUATOR_FLAG);
     bool forceActuatorFlag = checkAndSetForceActuatorFlag();
     sendUARTDataCode(CODE_FORCE_ACTUATOR_FLAG_TEST_RESULT, forceActuatorFlag);
 
+    // Test Charging Complete flag function
     sendUARTCode(CODE_TESTING_CHARGING_COMPLETE_FLAG);
     bool chargingCompleteFlag = checkAndSetChargingCompleteFlag();
     sendUARTDataCode(CODE_CHARGING_COMPLETE_FLAG_TEST_RESULT, chargingCompleteFlag);
-}
-
-void testFlagFunctions(void)
-{
-    // Test HV flag function
-    bool hvFlag = checkAndSetHVFlag();
-    sendUARTDataCode(0x20, hvFlag);  // Code for HV Flag test result
-
-    // Test Vehicle Stop Charging flag function
-    bool vehicleStopChargingFlag = checkAndSetVehicleStopChargingFlag();
-    sendUARTDataCode(0x21, vehicleStopChargingFlag);  // Code for Vehicle Stop Charging Flag test result
-
-    // Test Force Actuator flag function
-    bool forceActuatorFlag = checkAndSetForceActuatorFlag();
-    sendUARTDataCode(0x22, forceActuatorFlag);  // Code for Force Actuator Flag test result
-
-    // Test Charging Complete flag function
-    bool chargingCompleteFlag = checkAndSetChargingCompleteFlag();
-    sendUARTDataCode(0x23, chargingCompleteFlag);  // Code for Charging Complete Flag test result
 }
 
 void simulateCANMessages(void) {
@@ -886,6 +869,7 @@ void simulateCANMessages(void) {
     memcpy(rxData2.data, evcc_tx_2_data_ev_error, EVCC_TX_2_DLC);
     processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData2);
 }
+
 
 #endif
 

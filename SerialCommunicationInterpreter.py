@@ -123,31 +123,9 @@ def read_uart(serial_port):
         with serial.Serial(serial_port, 115200) as ser:
             print(Fore.CYAN + "Starting UART reader...\n")
             while True:
-                code = ser.read(1)  # Read one byte for the code
-                if not code:
-                    continue
-
-                code = ord(code)
-                if code in CODES:
-                    if code in [0x10, 0x11, 0x12, 0x13, 0x20, 0x21, 0x22, 0x23, 0x24, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71, 0x72]:
-                        data = ser.read(4)  # Read 4 bytes of data
-                        if len(data) == 4:
-                            data_value = struct.unpack('>I', data)[0]
-                            message = f"{CODES[code]}: {data_value}"
-                        else:
-                            message = "Invalid data length"
-                    else:
-                        message = CODES[code]
-
-                    if code in [0x01, 0x04, 0x80]:
-                        print(Fore.GREEN + f"INFO: {message}")
-                    elif code in [0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA9, 0xAA]:
-                        print(Fore.RED + f"ERROR: {message}")
-                    elif code in [0x10, 0x11, 0x12, 0x13, 0x20, 0x21, 0x22, 0x23, 0x24, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71, 0x72]:
-                        print(Fore.YELLOW + f"STATUS: {message}")
-                    else:
-                        print(Fore.BLUE + f"OTHER: {message}")
-
+                line = ser.readline().decode('utf-8').strip()  # Read a full line of data
+                if line:
+                    print(interpret_message([ord(c) for c in line]))
     except serial.SerialException as e:
         print(Fore.RED + f"Serial Error: {e}")
     except KeyboardInterrupt:
@@ -155,4 +133,3 @@ def read_uart(serial_port):
 
 if __name__ == "__main__":
     read_uart('COM4')
-
