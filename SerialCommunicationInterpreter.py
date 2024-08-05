@@ -123,9 +123,13 @@ def read_uart(serial_port):
         with serial.Serial(serial_port, 115200) as ser:
             print(Fore.CYAN + "Starting UART reader...\n")
             while True:
-                line = ser.readline().decode('utf-8').strip()  # Read a full line of data
+                line = ser.readline().strip()  # Read a full line of data
                 if line:
-                    print(interpret_message([ord(c) for c in line]))
+                    code = int(line, 16)
+                    if code in CODES:
+                        print(interpret_message([code]))
+                    else:
+                        print(Fore.RED + f"Unknown Code: {code}")
     except serial.SerialException as e:
         print(Fore.RED + f"Serial Error: {e}")
     except KeyboardInterrupt:

@@ -24,7 +24,7 @@
 #include "canmonitorutil.h"
 
 // Define TEST_MODE to enable test code
-//#define TEST_MODE 00
+#define TEST_MODE 01
 
 #define MSG_ID_RX_1 0x350U
 #define MSG_ID_RX_2 0xECC01U
