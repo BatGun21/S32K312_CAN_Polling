@@ -78,6 +78,9 @@ typedef struct {
 #define CODE_EV_READY_FOR_CHARGING 0x80
 #define CODE_EV_NOT_READY_FOR_CHARGING 0x81
 #define CODE_EV_NOT_READY_FOR_CHARGING_ERROR 0x82
+#define CODE_TESTING_START 0x00
+#define CODE_TESTING_END 0x99
+#define CODE_TEST_MODE_EXITING 0x9A
 
 //  Error codes
 #define CODE_EV_ERROR_1 0x08
@@ -157,6 +160,7 @@ typedef struct {
 #define CODE_FORCE_ACTUATOR_FLAG_TEST_RESULT 0x95
 #define CODE_TESTING_CHARGING_COMPLETE_FLAG 0x96
 #define CODE_CHARGING_COMPLETE_FLAG_TEST_RESULT 0x97
+
 
 /* Define the CAN message buffer for EVCC_TX*/
 ChargingDataPoint chargingLUT[LUT_SIZE];
@@ -724,11 +728,11 @@ void sendCANMessage(void)
 
 #ifdef TEST_MODE
 
-void runTests(void)
-{
+void runTests(void) {
     testPackUnpack();
     testFlagFunctions();
     simulateCANMessages();
+    sendUARTCode(CODE_TEST_MODE_EXITING);
 }
 
 void testPackUnpack(void) {
@@ -783,7 +787,8 @@ void testFlagFunctions(void) {
 }
 
 void simulateCANMessages(void) {
-    // Scenario 1: Normal Operation
+    // Normal Operation
+    sendUARTCode(CODE_TESTING_START);
     sendUARTCode(CODE_SCENARIO_NORMAL);
     uint8_t evcc_tx_1_data_normal[EVCC_TX_1_DLC] = {0x00, 0x00, 0x04, 0x00, 0x02, 0x00, 0x00, 0x00};  // Example normal data
     rxData1.msgId = MSG_ID_RX_1;
@@ -796,8 +801,10 @@ void simulateCANMessages(void) {
     rxData2.dataLen = EVCC_TX_2_DLC;
     memcpy(rxData2.data, evcc_tx_2_data_normal, EVCC_TX_2_DLC);
     processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData2);
+    sendUARTCode(CODE_TESTING_END);
 
-    // Scenario 2: Isolation Breached
+    // Isolation Breached
+    sendUARTCode(CODE_TESTING_START);
     sendUARTCode(CODE_SCENARIO_ISOLATION_BREACHED);
     uint8_t evcc_tx_1_data_isolation[EVCC_TX_1_DLC] = {0x00, 0x00, 0x04, 0x00, 0x02, 0x00, 0x00, 0x00};  // Same as normal for this example
     rxData1.dataLen = EVCC_TX_1_DLC;
@@ -808,8 +815,10 @@ void simulateCANMessages(void) {
     rxData2.dataLen = EVCC_TX_2_DLC;
     memcpy(rxData2.data, evcc_tx_2_data_isolation, EVCC_TX_2_DLC);
     processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData2);
+    sendUARTCode(CODE_TESTING_END);
 
-    // Scenario 3: Forced Unlock Requested
+    // Forced Unlock Requested
+    sendUARTCode(CODE_TESTING_START);
     sendUARTCode(CODE_SCENARIO_FORCED_UNLOCK_REQUESTED);
     uint8_t evcc_tx_1_data_unlock[EVCC_TX_1_DLC] = {0x00, 0x00, 0x04, 0x00, 0x02, 0x00, 0x00, 0x00};  // Same as normal for this example
     rxData1.dataLen = EVCC_TX_1_DLC;
@@ -820,8 +829,10 @@ void simulateCANMessages(void) {
     rxData2.dataLen = EVCC_TX_2_DLC;
     memcpy(rxData2.data, evcc_tx_2_data_unlock, EVCC_TX_2_DLC);
     processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData2);
+    sendUARTCode(CODE_TESTING_END);
 
-    // Scenario 4: Charging Complete
+    // Charging Complete
+    sendUARTCode(CODE_TESTING_START);
     sendUARTCode(CODE_SCENARIO_CHARGING_COMPLETE);
     uint8_t evcc_tx_1_data_complete[EVCC_TX_1_DLC] = {0x00, 0x00, 0x04, 0x00, 0x02, 0x00, 0x00, 0x00};  // Same as normal for this example
     rxData1.dataLen = EVCC_TX_1_DLC;
@@ -832,8 +843,10 @@ void simulateCANMessages(void) {
     rxData2.dataLen = EVCC_TX_2_DLC;
     memcpy(rxData2.data, evcc_tx_2_data_complete, EVCC_TX_2_DLC);
     processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData2);
+    sendUARTCode(CODE_TESTING_END);
 
-    // Scenario 5: Charging Stopped due to EVSE Error
+    // Charging Stopped due to EVSE Error
+    sendUARTCode(CODE_TESTING_START);
     sendUARTCode(CODE_SCENARIO_EVSE_ERROR);
     uint8_t evcc_tx_1_data_evse_error[EVCC_TX_1_DLC] = {0x00, 0x00, 0x04, 0x00, 0x02, 0x00, 0x00, 0x00};  // Same as normal for this example
     rxData1.dataLen = EVCC_TX_1_DLC;
@@ -844,8 +857,10 @@ void simulateCANMessages(void) {
     rxData2.dataLen = EVCC_TX_2_DLC;
     memcpy(rxData2.data, evcc_tx_2_data_evse_error, EVCC_TX_2_DLC);
     processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData2);
+    sendUARTCode(CODE_TESTING_END);
 
-    // Scenario 6: Charging Stopped due to EVCC Error
+    // Charging Stopped due to EVCC Error
+    sendUARTCode(CODE_TESTING_START);
     sendUARTCode(CODE_SCENARIO_EVCC_ERROR);
     uint8_t evcc_tx_1_data_evcc_error[EVCC_TX_1_DLC] = {0x00, 0x00, 0x04, 0x00, 0x02, 0x00, 0x00, 0x00};  // Same as normal for this example
     rxData1.dataLen = EVCC_TX_1_DLC;
@@ -856,8 +871,10 @@ void simulateCANMessages(void) {
     rxData2.dataLen = EVCC_TX_2_DLC;
     memcpy(rxData2.data, evcc_tx_2_data_evcc_error, EVCC_TX_2_DLC);
     processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData2);
+    sendUARTCode(CODE_TESTING_END);
 
-    // Scenario 7: Charging Stopped due to EV Error
+    // Charging Stopped due to EV Error
+    sendUARTCode(CODE_TESTING_START);
     sendUARTCode(CODE_SCENARIO_EV_ERROR);
     uint8_t evcc_tx_1_data_ev_error[EVCC_TX_1_DLC] = {0x00, 0x00, 0x04, 0x00, 0x02, 0x00, 0x00, 0x00};  // Same as normal for this example
     rxData1.dataLen = EVCC_TX_1_DLC;
@@ -868,9 +885,9 @@ void simulateCANMessages(void) {
     rxData2.dataLen = EVCC_TX_2_DLC;
     memcpy(rxData2.data, evcc_tx_2_data_ev_error, EVCC_TX_2_DLC);
     processCANMessage(FLEXCAN_STATUS_SUCCESS, &rxData2);
+    sendUARTCode(CODE_TESTING_END);
 }
-
-
 #endif
+
 
 
