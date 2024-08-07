@@ -2,16 +2,16 @@
 
 ## Overview
 
-This project involves integrating an Electric Vehicle Charging Controller (EVCC) with a Vehicle Control Unit (VCU) using NXP's S32K312 microcontroller and S32 Design Studio. The goal is to create a robust communication interface between the EVCC and VCU, enabling efficient management of vehicle charging operations.
+This project involves integrating an Electric Vehicle Charging Controller (EVCC) with a Vehicle Control Unit (VCU) using NXP's S32K312 microcontroller. The primary objective is to create a reliable communication interface that efficiently manages vehicle charging operations through CAN and UART communication.
 
 ## Project Structure
 
 The repository is structured as follows:
 
 - **`src/`**: Contains the source code files.
-  - `main.c`: The main application code that handles the core functionalities.
+  - `main.c`: The main application code handling core functionalities.
   - `evcc_integration.c`: Functions for integrating EVCC communication with VCU.
-  - `utils.c`: Utility functions for handling various operations.
+  - `utils.c`: Utility functions for various operations.
 - **`include/`**: Contains header files for the source code.
   - `main.h`: Header file for `main.c`.
   - `evcc_integration.h`: Header file for `evcc_integration.c`.
@@ -21,10 +21,38 @@ The repository is structured as follows:
 
 ## Features
 
-- **CAN Communication**: Manages CAN message handling for EVCC and VCU communication.
-- **UART Communication**: Facilitates serial communication for testing and debugging.
-- **Flag Handling**: Implements functions to check and set various operational flags.
-- **Testing Mode**: Includes a comprehensive testing suite to verify packing/unpacking functions and simulate different CAN message scenarios.
+- **CAN Communication**: Manages CAN message handling between the EVCC and VCU.
+- **UART Communication**: Facilitates serial communication for debugging and testing.
+- **Flag Handling**: Implements functions to check and manage operational flags.
+- **Testing Mode**: Includes a comprehensive suite for testing message packing/unpacking and CAN message scenarios.
+
+## Detailed Explanation
+
+### CAN Communication
+
+The project relies heavily on CAN (Controller Area Network) for robust and real-time communication between the EVCC and VCU. 
+
+- **Receiving CAN Messages**: The system listens for incoming CAN messages, processes them, and updates the system state based on the message content. The `processCANMessage` function in `main.c` is responsible for handling these messages. It takes the status and message details as inputs, updates internal states, and triggers necessary actions.
+
+- **Sending CAN Messages**: The project sends CAN messages to communicate various states and commands. The `sendCANMessage` function encapsulates this functionality. Messages are packed into a specific format and transmitted over the CAN bus to ensure accurate data exchange between components.
+
+### Packing and Unpacking
+
+Packing and unpacking messages are crucial for converting data between its raw format and a structured format suitable for CAN communication.
+
+- **Packing**: Packing functions convert structured data (e.g., EVCC message structures) into a byte array that can be sent over CAN. For instance, the `Pack_EVCC_RX_1_ecudb` function in `evcc_integration.c` takes an EVCC message structure and converts it into a format suitable for transmission. This includes setting appropriate lengths and identifiers.
+
+- **Unpacking**: Unpacking functions reverse the process, converting raw CAN message data back into structured formats. For example, `Unpack_EVCC_RX_1_ecudb` takes a byte array received over CAN and reconstructs it into the EVCC message structure. This ensures that the data can be processed and understood by the system.
+
+### Testing Mode
+
+The testing mode is designed to validate the system's functionality by simulating various scenarios and verifying the correctness of packing/unpacking operations and flag handling.
+
+- **Pack/Unpack Tests**: The `testPackUnpack` function tests whether the packing and unpacking processes correctly preserve message integrity. It checks the consistency between packed and unpacked data for different EVCC message types and sends the result over UART.
+
+- **Flag Functions Tests**: The `testFlagFunctions` function verifies that flag-related operations work correctly. It checks the status of various operational flags, such as HV flag and Vehicle Stop Charging flag, ensuring the system behaves as expected.
+
+- **Simulation of CAN Messages**: The `simulateCANMessages` function creates and sends various simulated CAN messages to test the system's response to different scenarios, including normal operation, isolation breaches, and error conditions. This helps in validating the robustness of the CAN message handling.
 
 ## Build Instructions
 
@@ -60,7 +88,7 @@ The repository is structured as follows:
 
 ### `main.c`
 
-- **`void initSystem(void)`**: Initializes the system components, including CAN, UART, and LEDs.
+- **`void initSystem(void)`**: Initializes system components, including CAN, UART, and LEDs.
 - **`void processCANMessage(FLEXCAN_StatusType status, CAN_MessageType *message)`**: Processes incoming CAN messages and updates system states accordingly.
 - **`void sendUARTCode(uint8_t code)`**: Sends a specific code over UART for communication and debugging.
 - **`void handleErrors(void)`**: Manages error conditions and performs necessary actions.
@@ -76,25 +104,6 @@ The repository is structured as follows:
 - **`void initializeFlags(void)`**: Initializes system flags for various operations.
 - **`bool checkAndSetVehicleStopChargingFlag(void)`**: Checks and sets the Vehicle Stop Charging flag.
 
-## Testing
-
-### Testing Mode
-
-The `TEST_MODE` section in the code includes functions for:
-- Packing and unpacking tests for different EVCC messages.
-- Flag function tests to verify the correct operation of various system flags.
-- Simulation of different CAN message scenarios to validate system responses.
-
-To run the tests, enable `TEST_MODE` and build the project. The results will be sent over UART.
-
 ## Additional Information
 
-- **NXP S32K312**: The microcontroller used for this project, which provides the necessary hardware for CAN and UART communication.
-- **S32 Design Studio**: The development environment used to build and manage the project.
-
-## Acknowledgements
-
-- This project uses components and libraries from NXP Semiconductors.
-- Special thanks to the development and support teams at Vayve Mobility Pvt. Ltd.
-
-For more information, refer to the [official documentation](https://www.nxp.com/).
+This project leverages CAN communication to ensure reliable and efficient data exchange between the EVCC and VCU, crucial for managing electric vehicle charging operations. The packing and unpacking processes are vital for ensuring accurate and consistent data transmission.
